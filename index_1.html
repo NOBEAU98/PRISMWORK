@@ -1,0 +1,1111 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><title>Read Aloud Comprehension Toolkit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@500&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: sticky header with role and grade-band controls, a scrolling tab rail, then one working view at a time in a two-column card grid. */
+:root{
+  --bg:#F3F6F9; --surface:#FFFFFF; --surface2:#E8EEF4; --fg:#12243A; --muted:#51647A; --line:#D3DCE6;
+  --accent:#0E7C8F; --accent-fg:#FFFFFF; --accent-soft:#DDF1F5;
+  --gold:#8A5A00; --gold-soft:#FBEFD2;
+  --brand:#1B2F5E; --head:#1B2F5E; --sun:#F4A21F; --sun2:#E9702B; --wave:#2AA6B8;
+  --good:#1F7A3F; --warn:#9A5B00; --crit:#B42318; --focus:#1B4FD8;
+  --r-no:#6F7782; --r-pa:#B8BFC8; --r-mo:#8FD3EE; --r-ye:#123B66; --r-no-t:#FFFFFF; --r-pa-t:#12243A; --r-mo-t:#12243A; --r-ye-t:#FFFFFF;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1926; --surface:#142335; --surface2:#1B2F44; --fg:#E6EDF4; --muted:#9DB0C3; --line:#2A425C;
+    --accent:#4FC3D6; --accent-fg:#06222A; --accent-soft:#14394A;
+    --gold:#F0C05A; --gold-soft:#3A2F12;
+  --brand:#0F1D38; --head:#E6EDF4; --sun:#F6B13D; --sun2:#F08A4B; --wave:#4FC3D6;
+    --good:#5CC98A; --warn:#F0B25A; --crit:#FF8F85; --focus:#8FB0FF; color-scheme:dark;
+    --r-no:#46515F; --r-pa:#7A8797; --r-mo:#4DA3D0; --r-ye:#BFE3FA; --r-no-t:#E6EDF4; --r-pa-t:#0D1926; --r-mo-t:#06182A; --r-ye-t:#0D1926;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1926; --surface:#142335; --surface2:#1B2F44; --fg:#E6EDF4; --muted:#9DB0C3; --line:#2A425C;
+  --accent:#4FC3D6; --accent-fg:#06222A; --accent-soft:#14394A;
+  --gold:#F0C05A; --gold-soft:#3A2F12;
+  --brand:#0F1D38; --head:#E6EDF4; --sun:#F6B13D; --sun2:#F08A4B; --wave:#4FC3D6;
+  --good:#5CC98A; --warn:#F0B25A; --crit:#FF8F85; --focus:#8FB0FF; color-scheme:dark;
+  --r-no:#46515F; --r-pa:#7A8797; --r-mo:#4DA3D0; --r-ye:#BFE3FA; --r-no-t:#E6EDF4; --r-pa-t:#0D1926; --r-mo-t:#06182A; --r-ye-t:#0D1926;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--brand)}
+h1,h2,h3,h4{font-family:var(--f-display);line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:1.5rem}
+h3{font-size:1.15rem}
+h4{font-size:1rem}
+h2,h3,.tb{color:var(--head)}
+p{margin:0}
+.wrap{max-width:1040px;margin:0 auto}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+
+/* header */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--brand);color:#fff;border-bottom:4px solid transparent;border-image:linear-gradient(90deg,var(--sun),var(--sun2),var(--wave)) 1;
+  margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
+.hdr-in{max-width:1040px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;justify-content:space-between;padding-block:12px 8px}
+.brand{min-width:0}
+.brand h1{font-size:clamp(1.05rem,2.6vw,1.35rem);letter-spacing:-.01em;line-height:1.2}
+.brand p{color:rgba(255,255,255,.8);font-size:.85rem}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ctrl{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.82)}
+select,input,textarea,button{font:inherit;color:var(--fg)}
+select,input[type=text],input[type=number],input[type=date],textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+.ctrl select{width:auto;font-weight:600;text-transform:none;letter-spacing:0;font-size:.95rem}
+textarea{resize:vertical;min-height:64px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:7px 11px;cursor:pointer;font-weight:600;font-size:.9rem;text-transform:none;letter-spacing:0;color:var(--fg)}
+.seg button[aria-pressed=true]{background:var(--sun);color:#14264A}
+.tabs{max-width:1040px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding-bottom:0;scrollbar-width:thin}
+.tabs a{white-space:nowrap;text-decoration:none;color:rgba(255,255,255,.78);font-weight:600;padding:9px 12px;border-bottom:3px solid transparent;position:relative}
+.tabs a:hover{color:#fff}
+.tabs a[aria-current=page]{color:#fff;border-bottom-color:var(--sun)}
+.subtabs{max-width:1040px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:0 0 2px;scrollbar-width:thin;background:rgba(0,0,0,.16);border-radius:0 0 8px 8px}
+.subtabs a{white-space:nowrap;text-decoration:none;color:rgba(255,255,255,.78);font-weight:600;font-size:.9rem;padding:7px 12px;border-bottom:3px solid transparent;position:relative}
+.subtabs a:hover{color:#fff}
+.subtabs a[aria-current=page]{color:#fff;border-bottom-color:var(--sun)}
+.subtabs a.rec::after{content:"";position:absolute;top:6px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--sun)}
+.subtabs:empty{display:none}
+.tabs a.rec::after{content:"";position:absolute;top:8px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--sun)}
+.legend{max-width:1040px;margin:0 auto;font-size:.8rem;color:rgba(255,255,255,.78);padding:6px 0 0}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--sun);margin-right:6px}
+
+/* content */
+main{max-width:1040px;margin:0 auto;padding-top:22px;display:flex;flex-direction:column;gap:28px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.sec>.lede{color:var(--muted);max-width:68ch}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.mine{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
+.card.flat{background:transparent}
+.panel{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.panel ol{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:6px}
+.chip{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.chip.code{font-family:var(--f-mono);letter-spacing:0;text-transform:none;background:var(--brand);color:#fff;font-size:.82rem}
+.chip.gold{background:var(--gold-soft);color:var(--gold)}
+.chip.good{color:var(--good)} .chip.warn{color:var(--warn)} .chip.crit{color:var(--crit)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+ul.tight,ol.tight{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:5px}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+.say{background:var(--surface2);border-radius:8px;padding:10px 12px;font-style:italic}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface2)}
+tr:last-child td{border-bottom:0}
+td.k{font-weight:700;white-space:nowrap}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:.88rem}
+.btn.danger{border-color:var(--crit);color:var(--crit);background:transparent}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);min-width:0}
+label.f>*:not(span){text-transform:none;letter-spacing:0;font-weight:400;font-size:1rem}
+details{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+details>summary{cursor:pointer;padding:12px 16px;font-weight:700;font-family:var(--f-display)}
+details>div{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+
+/* meters */
+.meter{display:flex;flex-direction:column;gap:4px;padding-bottom:2px}
+.track{position:relative;height:14px;border-radius:7px;background:var(--surface2)}
+.fill{position:absolute;inset:0 auto 0 0;border-radius:7px;background:var(--wave);width:0}
+.tick{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px}
+.tick.base{background:var(--muted)}
+.tick.tgt{background:var(--sun)}
+.mlabels{position:relative;height:1.3em;font-size:.76rem;font-weight:600;color:var(--muted)}
+.mlabels span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.mlabels span.t{color:var(--gold)}
+.goal-in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.status{font-size:.9rem;min-height:1.4em}
+.empty{color:var(--muted);font-style:italic}
+.ph{border:1.5px dashed var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;color:var(--muted)}
+.foot{max-width:1040px;margin:36px auto 0;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);padding-top:14px}
+.fb{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.checks{display:flex;flex-direction:column;gap:8px}
+.checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--accent)}
+.entry{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px;align-items:end}
+.entry .wide{grid-column:1/-1}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.tile{background:var(--surface2);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.tl{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tb{font-family:var(--f-display);font-size:1.5rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.ts{font-size:.82rem;color:var(--muted)}
+.tile label.f{margin-top:4px}
+.tile input{padding:6px 8px}
+.mlabels span.al{transform:none}
+.mix>div{gap:12px}
+.mrow{display:flex;flex-direction:column;gap:4px}
+.mlab{font-size:.85rem;font-weight:600}
+.mbar{display:flex;gap:2px;height:28px;border-radius:6px;overflow:hidden}
+.mbar span{display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;min-width:0;font-variant-numeric:tabular-nums}
+.s-no{background:var(--r-no);color:var(--r-no-t)} .s-pa{background:var(--r-pa);color:var(--r-pa-t)} .s-mo{background:var(--r-mo);color:var(--r-mo-t)} .s-ye{background:var(--r-ye);color:var(--r-ye-t)}
+.mleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.mleg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.src{font-size:.8rem;color:var(--muted)}
+a.btn{display:inline-block;text-decoration:none}
+.lib-item{gap:8px}
+.lib-item h3{font-size:1.05rem}
+.lib-item video,.lib-item img{max-width:100%;border-radius:8px;background:var(--surface2)}
+.lib-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+#lib-status{min-height:1.3em}
+a.btn.ghost{color:var(--accent)}
+.ctrl>span{white-space:nowrap}
+@media (max-width:700px){ .hdr{position:static} }
+@media (max-width:520px){ h2{font-size:1.3rem} .goal-in{grid-template-columns:1fr 1fr 1fr} }
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="brand">
+      <h1>Think-Alouds, Vocabulary Routines, and High-Quality Questions and Tasks</h1>
+      <p>DESE PRISM Grant/TNTP/Early Literacy League/Subteam 3/Lynn Public Schools (dashboard created by NMB)</p>
+    </div>
+    <div class="ctrls">
+      <label class="ctrl" for="role"><span>I am a</span>
+        <select id="role">
+          <option value="teacher">Classroom teacher</option>
+          <option value="support">Support teacher (ELD, SPED, MLE)</option>
+          <option value="cit">CIT or specialist</option>
+          <option value="principal">Principal</option>
+          <option value="district">District leader</option>
+        </select>
+      </label>
+      <div class="ctrl"><span id="band-l">Grade</span>
+        <div class="seg" role="group" aria-labelledby="band-l">
+          <button type="button" data-band="all" aria-pressed="true">PK-3</button>
+          <button type="button" data-band="pk" aria-pressed="false">PK</button>
+          <button type="button" data-band="k" aria-pressed="false">K</button>
+          <button type="button" data-band="1" aria-pressed="false">1</button>
+          <button type="button" data-band="2" aria-pressed="false">2</button>
+          <button type="button" data-band="3" aria-pressed="false">3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <nav class="subtabs" id="subtabs" aria-label="Pages in this section"></nav>
+  <div class="legend"><i></i>Gold dot marks sections most useful for your role.</div>
+</header>
+
+<main id="view" tabindex="-1"></main>
+<div class="foot">Draft for PRISM ELL Subteam 3 review. Fall 2026 results, benchmarks, and goals come from the Fall 2026 PRISM I Progress Monitoring data stepback (October 28, 2026), based on the DESE Early Literacy Observation Tool. MCAS 2027 test design is from the DESE Office of Student Assessment Services (May 11, 2026). Anything you type here is saved only in this browser. Do not enter student names or identifiable student information.</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- data ---------- */
+var LF=[
+ {id:"3B2",code:"3B.2",pri:1,span:"PK-3",base:40,tgt:76,short:"Think-alouds",text:"Teacher demonstrates meaning-making strategies through read-alouds and think-alouds centered on the grade-level text."},
+ {id:"3B3",code:"3B.3",pri:1,span:"PK-3",base:60,tgt:86,short:"Vocabulary",text:"Lesson focuses on key words, phrases, and sentences to build vocabulary and deepen understanding while attending to the text’s qualitative features: meaning, language, structure, and knowledge demands."},
+ {id:"3B5",code:"3B.5",pri:2,span:"K-3",base:45,tgt:70,short:"Grade-level access",text:"Students have access to grade-level tasks and experiences, with appropriate support to meet high expectations."},
+ {id:"3B6",code:"3B.6",pri:2,span:"K-3",base:15,tgt:55,short:"Literal to inferential",text:"Teacher guides students through text-based questions that progress from literal to deeper, inferential thinking aligned with grade-level standards, centered on the grade-level text."}
+];
+var BOYD={
+ "3B2":{spring:36,fbench:40,fall:32,wbench:55,goal:76,split:""},
+ "3B3":{spring:56,fbench:60,fall:50,wbench:70,goal:86,split:""},
+ "3B5":{spring:40,fbench:45,fall:19,wbench:55,goal:70,split:""},
+ "3B6":{spring:10,fbench:15,fall:12,wbench:35,goal:55,split:""}
+};
+LF.forEach(function(l){var d=BOYD[l.id];for(var k in d){l[k]=d[k];}l.base=l.spring;l.tgt=l.goal;});
+var PREK=[];
+var ALLG=LF.concat(PREK);
+/* Rating mix as shown in the data stepback: [No, Partially, Mostly, Yes] percent, with N lessons */
+var MIX={
+ "3B2":[["Spring 25-26, PK-3",25,[12,52,20,16]],["Fall 26-27, PK-3",52,[35,33,19,13]],["Fall 26-27, K-3 only",36,[25,42,17,17]]],
+ "3B3":[["Spring 25-26, PK-3",25,[16,28,36,20]],["Fall 26-27, PK-3",52,[12,38,27,23]],["Fall 26-27, K-3 only",36,[6,47,28,19]]],
+ "3B5":[["Spring 25-26, K-3",20,[20,40,15,25]],["Fall 26-27, K-3",36,[33,47,11,8]]],
+ "3B6":[["Spring 25-26, K-3",20,[55,35,10,0]],["Fall 26-27, K-3",36,[50,39,6,6]]],
+ };
+var VIEWS=[
+ {id:"start",label:"Overview"},{id:"prism",label:"PRISM Goals and Data"},{id:"wida",label:"WIDA"},{id:"think",label:"Think-Alouds"},{id:"vocab",label:"Vocabulary"},{id:"ques",label:"Questions and Tasks"},{id:"mcas",label:"MCAS 2027 (Grade 3)"},
+ {id:"units",label:"Unit Plans"},{id:"supports",label:"UDL and Supports"},{id:"mtss",label:"MTSS and Tiers"},{id:"toolbox",label:"School Toolbox"},
+ {id:"reflect",label:"Reflect"},{id:"track",label:"Coaching Tracker"},{id:"research",label:"Research"},{id:"webinars",label:"Webinars"},{id:"videos",label:"Training Videos"},{id:"lessons",label:"Exemplar Lessons"},{id:"resources",label:"Resources"}
+];
+var REC={
+ teacher:["think","vocab","ques","units","mcas","mtss","reflect","videos","lessons"],
+ support:["supports","mtss","think","vocab","units","research"],
+ cit:["toolbox","prism","mtss","track","reflect","think","videos","lessons"],
+ principal:["start","prism","mtss","toolbox","reflect","resources","webinars"],
+ district:["start","prism","units","track","resources","research","webinars"]
+};
+var ROLE_NAME={teacher:"Classroom teacher",support:"Support teacher",cit:"CIT or specialist",principal:"Principal",district:"District leader"};
+var START={
+ teacher:["Before your next read aloud, pick two or three stopping points in the text and plan what you will say. The planner is on the Think-Alouds tab.","Choose three to five Tier 2 words and run the six-step routine on the Vocabulary tab.","After the lesson, use the Reflect checklist and write one small next step."],
+ support:["Ask the classroom teacher for the text and the planned stopping points a few days ahead.","Use the UDL and Supports tab to pick supports that keep the thinking grade-level.","Agree on shared stems and routine language so students hear the same words in every setting."],
+ cit:["Choose one look-for as the focus for each teacher and record it in the Coaching Tracker.","Run the coaching cycle on the School Toolbox tab, in a small group when teachers share a need.","Bring patterns, not names, to PLC and principal conversations."],
+ principal:["Protect weekly PLC and coaching time. Sample schedules are on the School Toolbox tab.","Visit read alouds with the four look-fors in hand, and start each debrief with what the teacher asked to try.","Review BOY and MOY progress on the Overview with your CIT each month."],
+ district:["Review the goal gaps on the Overview and name the look-for that needs the most support.","Add district guidance and examples to the Unit Plans and Exemplar Lessons tabs as each is released.","Use Coaching Tracker patterns to direct professional learning and remove scheduling barriers."]
+};
+var STEMS=[
+ {p:"Predict",pk:"I think ___ will happen because ___.",g:"Based on ___, I predict ___. I will check as I read on."},
+ {p:"Picture it",pk:"I can picture ___ in my mind.",g:"The words ___ help me see ___."},
+ {p:"Wonder",pk:"I wonder why ___.",g:"I am wondering ___ because the author said ___."},
+ {p:"Clarify",pk:"Wait, that does not make sense. I will look at the picture again.",g:"That was confusing. I will reread ___ to figure it out."},
+ {p:"Infer",pk:"The book does not say, but I think ___ because ___.",g:"The author did not tell me directly, but ___ and ___ make me think ___."},
+ {p:"Connect",pk:"That reminds me of ___.",g:"This part connects to ___ that I know, which helps me understand ___."},
+ {p:"Solve a word",pk:"I do not know this word. The picture shows ___.",g:"I am not sure what ___ means. The words around it, ___, make me think it means ___."}
+];
+var LADDER=[
+ {lv:"Literal",goal:"Find it in the text.",pk:"Who is in this part? What happened?",g:"What does the text say about ___? Where do you see that?",ex:"What did the puppy’s tail do?",ex2:"What do bees collect from flowers?"},
+ {lv:"Connect the parts",goal:"Link events, ideas, or details.",pk:"Why did ___ do that? What happened first, then next?",g:"How did ___ cause ___? How are these two ideas related?",ex:"Why did the puppy’s tail stop wagging?",ex2:"How does a bee carrying pollen help the flowers?"},
+ {lv:"Infer",goal:"Read between the lines using evidence.",pk:"How does ___ feel? What in the book makes you think so?",g:"What can we infer about ___? Which words or details support that?",ex:"How does the puppy feel? What shows you?",ex2:"Why might a flower need bees? Which sentence gives you a clue?"},
+ {lv:"Deepen",goal:"Big ideas and author choices.",pk:"What did ___ learn? Why did the author put this picture here?",g:"What big idea does the author want us to take away? Why did the author choose the word ___?",ex:"What could the girl do to help a sad puppy?",ex2:"Why did the author use the word “collect” instead of “take”?"}
+];
+var CHECK=[
+ {id:"3B2",items:["I voiced my own thinking at planned stops in the text.","I named the strategy and pointed to the words or picture that led to it.","I used the grade-level text for the read aloud.","I moved from I do to We do, and students joined the thinking."]},
+ {id:"3B3",items:["I chose key words, phrases, or sentences before the lesson.","Students said, heard, and used the words, not only me.","I attended to meaning, language, structure, or knowledge demands in the text.","Vocabulary work connected back to understanding the text."]},
+ {id:"3B5",items:["All students had access to the grade-level text and task.","Supports were in place (visuals, frames, partner talk, chunking).","Students did the thinking, orally or in writing."]},
+ {id:"3B6",items:["Questions moved from literal toward inferential.","Students pointed to evidence in the text or pictures.","I followed up to push thinking (Say more. What makes you think so?)."]}
+];
+var FOCUS_OPTS=["3B.2 Think-alouds","3B.3 Vocabulary","3B.5 Grade-level access","3B.6 Literal to inferential"];
+
+/* ---------- state ---------- */
+var KEY="lps-read-aloud-dashboard-v1";
+function defaults(){return {role:"teacher",band:"all",goals:{},tracker:[{}],planner:[{},{},{}],mv:[{},{}],check:{done:{},step:"",focus:""},pd:[{}],links:[{}]};}
+var S=load();
+function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);var d=defaults();for(var k in o){d[k]=o[k];}if(d.band==="pk1")d.band="all";if(d.band==="g23")d.band="2";return d;}}catch(e){}return defaults();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function setPath(path,val){var p=path.split("."),o=S;for(var i=0;i<p.length-1;i++){if(o[p[i]]==null||typeof o[p[i]]!=="object"){o[p[i]]={};}o=o[p[i]];}o[p[p.length-1]]=val;}
+function getPath(path){var p=path.split("."),o=S;for(var i=0;i<p.length;i++){if(o==null)return "";o=o[p[i]];}return o==null?"":o;}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function low(){return S.band!=="2"&&S.band!=="3";}
+function bandName(){return low()?"PK-1":"2-3";}
+
+/* ---------- helpers ---------- */
+function card(title,body,cls){return '<div class="card '+(cls||"")+'">'+(title?'<h3>'+title+'</h3>':'')+body+'</div>';}
+function sec(title,lede,body){return '<section class="sec"><h2>'+title+'</h2>'+(lede?'<p class="lede">'+lede+'</p>':'')+body+'</section>';}
+function ul(a){return '<ul class="tight">'+a.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul>';}
+function ph(t,d){return '<div class="ph"><span class="chip gold" style="align-self:flex-start">Forthcoming</span><strong style="color:var(--fg)">'+t+'</strong><span>'+d+'</span></div>';}
+function inp(path,label,type,extra){var v=getPath(path);return '<label class="f"><span>'+label+'</span><input type="'+(type||"text")+'" data-k="'+path+'" value="'+esc(v)+'" '+(extra||"")+'></label>';}
+function txt(path,label,rows){return '<label class="f"><span>'+label+'</span><textarea data-k="'+path+'" rows="'+(rows||3)+'">'+esc(getPath(path))+'</textarea></label>';}
+function sel(path,label,opts){var v=getPath(path);return '<label class="f"><span>'+label+'</span><select data-k="'+path+'"><option value=""></option>'+opts.map(function(o){return '<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>';}).join("")+'</select></label>';}
+
+/* ---------- views ---------- */
+function tile(label,big,sub,extra){return '<div class="tile"><div class="tl">'+label+'</div><div class="tb">'+big+'</div>'+(sub?'<div class="ts">'+sub+'</div>':'')+(extra||'')+'</div>';}
+function benchChip(actual,bench){var d=actual-bench,c,t;if(d>=0){c="good";t="At or above benchmark";}else if(d>=-5){c="warn";t="Within 5 points of benchmark";}else{c="crit";t="Below benchmark";}return '<span class="chip '+c+'" style="align-self:flex-start;white-space:normal">'+t+'</span>';}
+function mixHtml(id){
+  var rows=MIX[id];if(!rows)return "";
+  var cl=["no","pa","mo","ye"],nm=["No","Partially","Mostly","Yes"];
+  var leg='<div class="mleg">'+nm.map(function(n,i){return '<span><i class="s-'+cl[i]+'"></i>'+n+'</span>';}).join("")+'</div>';
+  return '<details class="mix"><summary>Rating mix: No, Partially, Mostly, Yes</summary><div>'+rows.map(function(r){
+    var label=r[0]+', N = '+r[1]+': '+r[2].map(function(v,i){return nm[i]+' '+v+'%';}).join(', ');
+    return '<div class="mrow"><div class="mlab">'+r[0]+' <span class="muted">(N = '+r[1]+')</span></div><div class="mbar" role="img" aria-label="'+label+'">'+
+      r[2].map(function(v,i){return v>0?'<span class="s-'+cl[i]+'" style="flex:'+v+' 1 0%">'+(v>=8?v+'%':'')+'</span>':'';}).join("")+'</div></div>';
+  }).join("")+leg+'<p class="small muted">Percentages are as shown in the data stepback and may not total 100 because of rounding. Different lessons are observed each round and some samples are small, so read changes as directional.</p></div></details>';
+}
+function goalCard(g){
+  var attrs='min="0" max="100" inputmode="decimal"';
+  var wIn=inp("goals."+g.id+".winter","Actual %","number",attrs+' id="in-'+g.id+'-winter"');
+  var sIn=inp("goals."+g.id+".spring","Actual %","number",attrs+' id="in-'+g.id+'-spring"');
+  var al=g.spring<15?' class="al"':'';
+  return '<div class="card" id="goal-'+g.id+'">'+
+    '<div class="row"><span class="chip code">'+g.code+'</span><span class="chip">'+g.span+'</span><span class="chip" data-climb="'+g.id+'" hidden></span></div>'+
+    '<p>'+g.text+'</p>'+
+    '<div class="meter"><div class="track"><div class="fill" id="fill-'+g.id+'"></div><i class="tick base" style="left:'+g.spring+'%"></i><i class="tick tgt" style="left:'+g.goal+'%"></i></div>'+
+    '<div class="mlabels"><span'+al+' style="left:'+g.spring+'%">Spring 26: '+g.spring+'%</span><span class="t" style="left:'+g.goal+'%">Goal '+g.goal+'%</span></div></div>'+
+    '<div class="tiles">'+
+      tile("Spring 2026",g.spring+"%","Actual")+
+      tile("Fall 2026",g.fall+"%","Benchmark "+g.fbench+"%"+(g.split?"<br>"+g.split:""),benchChip(g.fall,g.fbench))+
+      tile("Winter 2027",g.wbench+"%","Benchmark",wIn)+
+      tile("Spring 2027",g.goal+"%","Goal",sIn)+
+    '</div>'+
+    '<p class="status" id="st-'+g.id+'" aria-live="polite"></p>'+mixHtml(g.id)+'</div>';
+}
+function vStart(){
+  var role=S.role;
+  var steps=START[role].map(function(s){return '<li>'+s+'</li>';}).join("");
+  var chips=['<span class="chip gold">70 lessons observed</span>','<span class="chip">K 11</span>','<span class="chip">Grade 1 12</span>','<span class="chip">Grade 2 15</span>','<span class="chip">Grade 3 13</span>','<span class="chip">Complex Text, Comprehension 52</span>','<span class="chip">Foundational Skills 15</span>','<span class="chip">Writing 3</span>'].join(" ");
+  return sec("Where we are: Fall 2026 (BOY)",
+    "Results from the Fall 2026 PRISM I classroom walkthroughs, shared at the October 28, 2026 data stepback. Each figure is the percentage of observed lessons rated Yes or Mostly on a DESE Early Literacy Observation Tool look-for.",
+    '<div class="row">'+chips+'</div>'+
+    '<div class="panel"><h3>What stands out</h3>'+ul([
+      'Three of the four PK-3 and K-3 look-fors are below the Fall benchmark: 3B.2 (32% vs 40%), 3B.3 (50% vs 60%), and 3B.5 (19% vs 45%). 3B.6 is 3 points below (12% vs 15%).',
+      'K-3 look-for 3B.5 has the largest gap to the Spring goal: 51 points (19% now, 70% goal).',
+      'In walkthroughs, many teachers had annotated the text with planned stopping points, but often asked the question without modeling thinking or guiding students to the evidence.'])+
+      '<p class="small muted">Lessons observed differ each round, and some samples are small (see the rating mix under each card). Treat changes from Spring 2026 as directional.</p></div>'+
+    '<h3>Priority 1: Think-Alouds and Vocabulary Routines (PK-3)</h3><div class="grid2">'+goalCard(LF[0])+goalCard(LF[1])+'</div>'+
+    '<h3>Priority 2: High-Quality Questions and Tasks (K-3)</h3><div class="grid2">'+goalCard(LF[2])+goalCard(LF[3])+'</div>'+
+    '<p class="small muted">Source: Fall 2026 PRISM I Progress Monitoring data stepback, October 28, 2026. Winter and Spring 2027 actuals are entered by you and saved in this browser only.</p>')+
+  sec("Celebrations from BOY","Strengths to name and build on, as reported in the data stepback.",
+    '<div class="grid2">'+
+    card("K-3",ul(['1A2, 1A3, and 1A4 all grew from the end of last year to the start of this year. 1A4 is rated Mostly/Yes in 86% of classrooms.','Six of ten Reading Foundational Skills look-fors (Section 2) grew, and 2A1 (foundational skills reflect grade-level standards) scored 100% Mostly/Yes.']))+
+    '</div>')+
+  '<section class="sec"><div class="panel"><h2>'+ROLE_NAME[role]+': start here</h2><ol>'+steps+'</ol></div></section>'+
+  sec("Desired outcome",
+    "In every read aloud lesson, students see teachers model meaning-making within gradual release, paired with meaningful, consistent vocabulary routines that support access to the text and language development, regardless of language model.",
+    "")+
+  sec("About this work","This toolkit is the work of PRISM ELL Subteam 3 (School-Based Systems), part of the PRISM Early Literacy League, with the overarching goal of improving reading comprehension.",
+    card("PRISM ELL Subteam 3: School-Based Systems",
+      '<p>Designs the school-, grade-, and teacher-level supports that sustain and spread strong read aloud instruction in every building: think-alouds, consistent vocabulary routines, and high-quality questions and tasks.</p>'+
+      '<p class="small"><strong>Members:</strong> Noelle Beaulieu, Shawna Carr, Christina Colella, Rebecca Darby, Norma DeFilippo, Sara Doughty, Meghan McLaughlin, Tanya Phelps, Callie Rotsko, and Susannah Warden</p>'+
+      '<p class="small"><strong>Serves:</strong> PK-3 CITs, program specialists, principals, district leaders, MLE educators, reading specialists</p>'+
+      '<p class="small"><strong>Deliverable:</strong> this toolkit, plus a checklist of systems-level shifts (district and school) to support teachers</p>'+
+      '<span class="chip" style="align-self:flex-start">Draft</span>'))+
+  sec("Why this work matters: PRISM I 2029 goals","The look-fors above feed the larger PRISM I goals for the cohort.",
+    '<div class="grid2">'+
+    card("2029 goals",ul(['80% of students in the PRISM I cohort meet benchmarks in reading, as measured by DESE’s approved early literacy screening assessments, by the end of each grade K-3.','A 33% increase in the percentage of the cohort meeting or exceeding expectations on third grade MCAS.','Disparities in meeting early literacy benchmarks and MCAS expectations (for example by race/ethnicity, students with disabilities, and MLLs) are reduced annually.']))+
+    card("Grade 3 MCAS in Spring 2027",'<p>The ELA test design changes in Spring 2027: no essay, two extended-response questions, shorter passages, and new stand-alone questions.</p><p><a class="btn sm" href="#mcas">See the grade 3 summary</a></p>')+card("The Instructional Core",'<p>Lynn’s four elements of instruction:</p>'+ul(['Students engage in rigorous, grade-level learning.','Students experience culturally and linguistically responsive instruction.','Students do the thinking and the talking.','Instruction is responsive, scaffolded, and differentiated.']))+
+    '</div>');
+}
+function thinkBoy(){
+  return '<div class="grid2">'+
+    card("What the Fall 2026 walkthroughs showed (3B.2)",
+      '<p><strong>32%</strong> of PK-3 lessons were rated Yes or Mostly (benchmark 40%).</p>'+
+      ul(['Many teachers had annotated the text or marked where to ask questions.','In many of those lessons the teacher asked the question but did not model thinking or guide students to find the answer in the text. The teacher often moved on quickly or gave the answer.','Bright spot: a kindergarten teacher modeled thinking aloud centered on the text during a first read, then prompted a turn and talk with a sentence stem.']))+
+    card("Practice move: from marked stop to think-aloud",
+      '<p>You have already marked the stop. At that spot:</p><ol class="tight"><li><strong>Say what you notice</strong> in the words or picture.</li><li><strong>Say what you think and why</strong>, pointing to the evidence.</li><li><strong>Hand off:</strong> “Turn and talk. What do you think? Use our stem.”</li></ol>')+
+  '</div>';
+}
+function vocabBoy(){
+  return card("What the Fall 2026 walkthroughs showed (3B.3)",
+    '<p><strong>50%</strong> of PK-3 lessons were rated Yes or Mostly (benchmark 60%).</p>'+
+    ul(['In K-3, the most common rating was Partially (47%). Only 6% were rated No.','Reading of the data: attention to key words is often present in part, so the next step is a consistent routine across lessons rather than a brand new one.']));
+}
+function quesBoy(){
+  return '<div class="grid2">'+
+    card("What the Fall 2026 walkthroughs showed (3B.5 and 3B.6)",
+      ul(['<strong>3B.5, K-3:</strong> 19% Yes or Mostly (benchmark 45%; Spring 2026 was 40%). 33% were rated No and 47% Partially.','<strong>3B.6, K-3:</strong> 12% Yes or Mostly (benchmark 15%; Spring 2026 was 10%). 50% were rated No and 39% Partially.','Observation: a first-grade teacher moved straight from defining compare and contrast to an independent worksheet without modeling how to find an answer and evidence in the text. Students struggled to complete it.','Reading of the data: modeling how to find evidence comes before asking students to do it alone. This connects directly to the think-aloud work.']))+
+  '</div>';
+}
+function vThink(){
+  var pk=low();
+  var stems='<div class="tbl-wrap"><table><thead><tr><th>Purpose</th><th>Sentence stem ('+bandName()+')</th></tr></thead><tbody>'+
+    STEMS.map(function(s){return '<tr><td class="k">'+s.p+'</td><td>'+esc(pk?s.pk:s.g)+'</td></tr>';}).join("")+'</tbody></table></div>';
+  var opts=STEMS.map(function(s){return s.p;});
+  var rows=S.planner.map(function(r,i){
+    return '<div class="entry">'+inp("planner."+i+".stop","Stopping point (page or line)","text",'id="pl-'+i+'-stop"')+sel("planner."+i+".purpose","Purpose",opts)+
+      txt("planner."+i+".say","What I will say",2).replace('<label class="f">','<label class="f wide">')+
+      inp("planner."+i+".word","Key word to teach here","text",'id="pl-'+i+'-word"')+
+      '<button type="button" class="btn danger sm" data-act="del-row" data-list="planner" data-i="'+i+'">Remove</button></div>';
+  }).join("");
+  var script=pk?
+    '<p class="small muted">Sample text written for this page, not from MyView: <em>The puppy’s ears dropped. Its tail stopped wagging.</em></p>'+
+    '<div class="say">Hmm. The puppy’s ears dropped, and its tail stopped wagging. I am picturing a puppy with floppy ears and a still tail. When my dog’s ears go down, she feels sad. The book does not say it, but I think the puppy feels sad. The clue was its tail.</div>'+
+    ul(["Strategy named: infer from clues.","Evidence pointed to: ears and tail.","Next, We do: “Turn to your partner. What else could show a puppy is sad?”"]):
+    '<p class="small muted">Sample text written for this page, not from MyView: <em>Honeybees visit flowers to collect nectar. As they move from flower to flower, pollen sticks to their legs.</em></p>'+
+    '<div class="say">I am not sure what nectar means. The sentence says bees collect it from flowers, so it must be something inside a flower that bees want. I will keep reading to check. Now I am wondering why pollen sticks to their legs and what happens next. I think the bees carry pollen to the next flower. That is a clue the author did not state directly.</div>'+
+    ul(["Strategies named: solve a word, wonder, infer.","Evidence pointed to: “collect” and “from flower to flower.”","Next, We do: “What do you think happens to the pollen when the bee lands? What in the sentence tells you?”"]);
+  return sec("Think-Aloud Toolkit","Look-for "+LF[0].code+": the teacher demonstrates meaning-making strategies through read-alouds and think-alouds centered on the grade-level text.",
+    '<div class="grid2">'+
+    card("A think-aloud is",ul(["Your own thinking, said out loud, at a planned spot in the text.","Short, usually under a minute.","Tied to words or pictures that students can see.","Named by strategy, so students can borrow it."])) +
+    card("A think-aloud is not",ul(["A question for students to answer (that is discussion).","A retelling or summary of the page.","Narration of every page.","Telling students what to think."]))+
+    '</div>'+
+    thinkBoy()+'<h3>Gradual release inside a read aloud</h3>'+
+    '<div class="grid3">'+
+    card("I do",'<p>I read and stop at a planned spot. I say my thinking, name the strategy, and point to the words or picture that led to it. Students listen and watch.</p>')+
+    card("We do",'<p>I start the thinking and students finish it with me. Turn and talk with a partner, then share. I prompt with stems, not answers.</p>')+
+    card("You do",'<p>Students think aloud to a partner or on a sticky note at a stopping point. I listen in, note who needs more modeling, and prompt.</p>')+
+    '</div>'+
+    '<p class="small muted">Many teachers model on the first read and co-construct on a second read of the same text. Adjust to the lesson design in MyView.</p>'+
+    '<h3>Sentence stems by purpose</h3>'+stems+
+    '<h3>Two-minute planner</h3><p class="lede">Mark two or three stops before the lesson. Your entries are saved in this browser.</p>'+rows+
+    '<div><button type="button" class="btn ghost sm" data-act="add-row" data-list="planner">Add a stop</button></div>'+
+    '<h3>Model think-aloud ('+bandName()+')</h3>'+card("",script)+
+    '<h3>Shared guidance and exemplars</h3>'+ph("District think-aloud guidance and examples","Add exemplar lessons and district-approved examples on the Exemplar Lessons tab when released.")
+  );
+}
+function vVocab(){
+  var pk=low();
+  var steps=[
+    ["Say it",pk?"Say the word, students repeat it, clap the syllables.":"Say the word, students repeat it twice, then look at the spelling."],
+    ["See it","Show a picture or gesture, or read the sentence where the word appears in the text."],
+    ["Define it","Give a student-friendly definition in words students already know. Example: nectar is the sweet liquid inside flowers."],
+    ["Connect it","Tie it to the text and to students’ lives. Example: bees drink nectar; what sweet drink do you like?"],
+    ["Use it",pk?"Partner talk with a frame: I see ___. ___ is like ___.":"Partner talk with a frame, then one sentence in writing or a quick oral share."],
+    ["Revisit it","Bring it back across the week and other lessons: act it out, choose between examples, add it to a word wall."]
+  ];
+  var stepHtml='<ol class="tight">'+steps.map(function(s){return '<li><strong>'+s[0]+'.</strong> '+s[1]+'</li>';}).join("")+'</ol>';
+  var rhythm=[["Day 1","Introduce three to five words in context during the read aloud (Say, See, Define)."],["Day 2","Revisit during a second read. Give a new context sentence (Connect)."],["Day 3","Word work: examples and non-examples, word relationships"+(pk?" with pictures.":" and word parts.")],["Day 4","Use the words in talk"+(pk?" and drawing.":" and writing.")+" (Use)"],["Day 5","Review and a one-minute check. Which words are secure? Which need another pass? (Revisit)"]];
+  return sec("Vocabulary Routine Toolkit","Look-for "+LF[1].code+": the lesson focuses on key words, phrases, and sentences to build vocabulary and deepen understanding while attending to the text’s qualitative features.",
+    vocabBoy()+'<div class="grid2">'+card("Six-step routine ("+bandName()+")",stepHtml)+
+    card("Choosing Tier 2 words",ul(["Will students meet it again across many texts?","Is it a more precise way to say something students already know?","Does understanding this text depend on it?","Can I explain it with words students already know?","Can students use it in their own talk?"])+'<p class="small muted">Tier 1 words are everyday words students usually know. Tier 3 words are specific to one subject; teach them as needed inside content. Three to five words per text is a typical range.</p>')+'</div>'+
+    '<h3>Attend to the text’s qualitative features</h3>'+
+    '<div class="grid2">'+
+    card("Meaning",'<p>What is the text mainly about? Is there more than one level of meaning, such as a lesson or an unstated purpose?</p>')+
+    card("Language",'<p>Which words, phrases, or sentences are figurative, unfamiliar, or complex? Look for idioms and long sentences with several parts.</p>')+
+    card("Structure",'<p>How is the text organized: problem and solution, sequence, or description? What helps readers follow it?</p>')+
+    card("Knowledge demands",'<p>What background does the text assume? What should be built before or during reading?</p>')+
+    '</div>'+
+    '<h3>Sample weekly rhythm</h3><div class="tbl-wrap"><table><thead><tr><th>Day</th><th>Routine</th></tr></thead><tbody>'+
+    rhythm.map(function(r){return '<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td></tr>';}).join("")+'</tbody></table></div>'+
+    '<p class="small muted">A sample to adapt to MyView pacing, not a district requirement.</p>');
+}
+function vQues(){
+  var pk=low();
+  var note=pk?'<p class="small"><span class="chip gold">Scope</span> Priority 2 covers K-3. Stems below are for K-1.</p>':'';
+  var rows=LADDER.map(function(l){return '<tr><td class="k">'+l.lv+'<div class="small muted" style="font-weight:400">'+l.goal+'</div></td><td>'+esc(pk?l.pk:l.g)+'</td><td>'+esc(pk?l.ex:l.ex2)+'</td></tr>';}).join("");
+  return sec("Questions and Tasks Ladder (K-3)","Look-fors "+LF[2].code+" and "+LF[3].code+": all students reach grade-level text and tasks with support, and questions move from literal to inferential.",
+    quesBoy()+note+'<div class="tbl-wrap"><table><thead><tr><th>Level</th><th>Question stems ('+(pk?"K-1":"2-3")+')</th><th>Example on a sample text</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<p class="small muted">Examples use the sample texts from the Think-Alouds tab, written for this page. Replace them with your MyView text.</p>'+
+    '<h3>Same thinking, more support</h3><p class="lede">Keep the grade-level text and the inferential question. Change the support around them.</p>'+
+    '<div class="grid2">'+
+    card("Keep",ul(["The grade-level text.","The question that asks for evidence and inference.","High expectations for every student’s thinking."]))+
+    card("Add support with",ul(["Pictures, objects, and gestures.","Sentence frames and word banks.","Oral rehearsal with a partner before sharing.","Chunking the text and the question.","Extra wait time, and a second read."]))+
+    card("Avoid",ul(["Swapping the text for an easier one.","Skipping the inferential question for some students.","Answering for students before they try."]))+
+    '</div>'+
+    '<h3>Can a lower-level text be used?</h3><p class="lede">Yes, as a bridge or for skills practice. Not as a replacement for the grade-level text.</p>'+
+    tbl(["Purpose","Lower-level text appropriate?","How to use it"],[
+      ["Building background knowledge and vocabulary before the grade-level text","Yes","Use a picture book, short video, or easier text on the same topic as part of a text set. Then return to the grade-level text."],
+      ["Foundational skills practice (phonics, fluency)","Yes","Use decodable or leveled text. This builds decoding. It is not the comprehension lesson."],
+      ["Independent reading and small-group practice","Yes, in addition","Add it to the grade-level text, not in place of it."],
+      ["Comparing two texts on one idea","Yes","Pair a simpler text with the complex one and ask how each treats the idea."],
+      ["Teaching a grade-level comprehension standard (theme, structure, inference)","No","The text needs enough complexity to analyze. A simple text lowers the task as well."],
+      ["Replacing the core text for students who struggle to read it","No","Keep the text. Read it aloud, chunk it, pre-teach words, and add frames and partner talk."]])+
+    '<p class="small"><strong>Rule of thumb.</strong> If a student cannot read the text independently, change the supports, not the text. Keep the grade-level text and the inferential question, and keep the task at grade level.</p>'+
+    '<p class="small muted">Basis: research on instructional level and access to grade-level work (for example, Shanahan on matching students to texts, and TNTP, The Opportunity Myth, 2018). Connects to look-for 3B.5, access to grade-level tasks with support.</p>');
+}
+function udlSec(){
+  var rows=[
+    ["Engagement (the why)","Partner talk at each stopping point. Choice in how to respond. Acting out a part of the text. Connecting the text to students’ lives.","Think-aloud turn and talk; acting out the text"],
+    ["Representation (the what)","Pictures with the text. Previewing key words with a picture or gesture. An anchor chart of stems. Modeling thinking aloud before students try.","Think-Aloud Toolkit; six-step vocabulary routine"],
+    ["Action and expression (the how)","Telling a partner, drawing and labeling, or writing. Sentence starters. Dictating instead of writing.","Questions and Tasks Ladder; look-for 3B.5"]
+  ];
+  return sec("Universal Design for Learning (UDL)",
+    "UDL is a planning framework built on one idea: design lessons for the full range of learners from the start, so you do not have to retrofit them for individual students later. Think of curb cuts in sidewalks. They were designed for wheelchair users, but strollers, delivery carts, and travelers with luggage all benefit. Variability in a classroom is expected, so the lesson should be flexible enough to meet it.",
+    '<h3>The three principles</h3><div class="grid3">'+
+    card("Engagement: the why",'<p>Give students multiple ways to get and stay motivated.</p>'+ul(['Choice in topic or product.','Connections to students’ lives.','Partner or small-group work.','Movement or brain breaks.']))+
+    card("Representation: the what",'<p>Present information in more than one way.</p>'+ul(['Text paired with images, read-alouds, or video.','Previewing key vocabulary.','Anchor charts and graphic organizers.','Modeling a skill before students try it.']))+
+    card("Action and expression: the how",'<p>Let students show what they know in more than one way.</p>'+ul(['Speaking, drawing, writing, or building a response.','Sentence starters.','Allowing a student to dictate instead of write.']))+
+    '</div>'+
+    '<h3>UDL in a PK-3 read aloud</h3>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Principle</th><th>In a read aloud</th><th>Where it connects here</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>';}).join("")+'</tbody></table></div>'+
+    '<div class="grid2">'+
+    card("Example: one goal, several paths",'<p>Goal for everyone: <em>students describe how a character feels.</em> The goal stays the same. The paths vary:</p>'+ul(['Students listen to the text with pictures, reread it, or do both.','Students show their thinking by telling a partner, drawing and labeling a feeling, or using a feelings chart.','Students can choose between two grade-level texts on the same topic.']))+
+    card("What UDL is not",ul(['<strong>It does not lower expectations.</strong> The goal stays rigorous and the routes to it flex.','<strong>It is not the same as differentiation.</strong> Differentiation adjusts instruction for specific students after the fact. UDL builds flexibility in up front, so fewer adjustments are needed.','<strong>It does not mean 25 different lessons.</strong> A few well-chosen options usually cover most needs.']))+
+    '</div>'+
+    card("Our connection to the look-fors",'<p>Look-for 3B.5 asks for access to grade-level tasks with appropriate support. UDL options keep students in the grade-level text and change how they get in and how they show thinking. This is our reading, not DESE guidance.</p>')+
+    '<h3>Where to start</h3>'+
+    '<div class="card"><p>Pick one lesson you already teach. Ask: where might a student get stuck, and what is one alternate way in? Then add one option for how students take in the content, or one option for how they show what they learned. Small changes add up quickly.</p>'+
+    '<div class="entry">'+inp("udl.lesson","Lesson","text",'id="udl-lesson"')+txt("udl.stuck","Where might a student get stuck?",2).replace('<label class="f">','<label class="f wide">')+txt("udl.in","One added way to take in the content",2)+txt("udl.out","One added way to show learning",2)+'</div></div>');
+}
+function vSupports(){
+  return udlSec()+sec("Multilingual Learners and Students with Disabilities","Keep think-alouds and vocabulary routines grade-level for every student. Change the supports, not the thinking.",
+    '<div class="grid2">'+
+    card("Multilingual learners",ul([
+      "Pair every key word with a picture, object, or gesture.",
+      "Pre-teach key words before the read aloud, in a small group if possible.",
+      "Point out cognates and invite connections to home languages.",
+      "Offer sentence frames at more than one level of language.",
+      "Give partner rehearsal before whole-group sharing.",
+      "Allow a first response in the home language, then support the move to English.",
+      "Pair spoken think-alouds with gestures and simple, repeated stems."]))+
+    card("Students with disabilities",ul([
+      "Chunk the text and keep stopping points predictable.",
+      "Use a visual routine so students know what comes next.",
+      "Keep the same stems and anchor chart across the unit.",
+      "Reduce the language load, not the level of thinking.",
+      "Accept multiple response modes: point, choose, act out, or use a device.",
+      "Preview vocabulary with pictures before the lesson.",
+      "Follow IEP and 504 accommodations in every read aloud."]))+
+    '</div>'+
+    '<h3>Language supports and the LPS Instructional Core</h3>'+
+    '<div class="grid2">'+
+    card("Scaffold without lowering",'<p>Adjust the pathway (visuals, vocabulary routines, sentence frames, small group time), not the grade-level goal.</p>'+ul(["Is core text taught whole group in Tier 1, with scaffolds built in?","Are students doing the thinking and the talking?","Is writing tied to evidence from the text?","What evidence from student talk, writing, or data (mCLASS, myView, IXL) will drive the next instructional move?"])+'<p class="small muted">Principles from the LPS Elementary ELA Instructional Core. Questions adapted for read aloud planning.</p>')+
+    card("WIDA Key Language Uses in ELA",'<p>Use these when choosing a sentence frame for a think-aloud or a partner talk task.</p>'+ul(["Narrate and Inform: part of WIDA\u2019s ELA language standard in grades K-5.","Argue: part of the ELA standard only in grades 4-5. In K-3, opinions fall under WIDA\u2019s Social and Instructional Language standard.","Explain: belongs to science, math, and social studies, not ELA."])+'<p class="small muted">Source: WIDA English Language Development Standards Framework, 2020 Edition. Grade-level sentence frames are being drafted separately and need review by the EL team.</p>')+
+    '</div>'+
+    '<h3>Co-planning for ELD, SPED, and MLE educators</h3>'+
+    '<div class="grid3">'+
+    card("Before",ul(["Get the text and stopping points a few days ahead.","Agree on who pre-teaches which words.","Share the stems that will be used."]))+
+    card("During",ul(["Use the same routine language as the classroom teacher.","Prompt students to use the stems.","Note which supports students used."]))+
+    card("After",ul(["Debrief with the classroom teacher.","Share what worked for which students.","Choose one support to keep or change."]))+
+    '</div>');
+}
+function expCard(id,title,items){return '<div class="card'+(S.role===id?' mine':'')+'"><h3>'+title+(S.role===id?' <span class="chip gold">Your role</span>':'')+'</h3>'+ul(items)+'</div>';}
+
+/* ---------- DESE What to Look For ---------- */
+var WTL={K:{u:"https://www.doe.mass.edu/frameworks/observation/ela-gk.pdf",
+ st:["Works daily with complex literature and informational text with prompting and support, asking and answering questions and comparing characters or texts.","Explores word relationships and shades of meaning with support and uses new vocabulary in reading.","Takes part in discussions that follow discussion rules, with several exchanges.","Listens to comprehend complex texts during read alouds and shows learning through responses.","Writes daily using drawing, dictation, and writing for opinion, informative, and narrative pieces."],
+ te:["Selects developmentally appropriate complex texts and discusses the author’s role.","Uses scaffolding and repeated practice so students can use new vocabulary and language patterns.","Uses frequent checks for understanding, such as conferences and read-aloud responses, and adjusts instruction."]},
+1:{u:"https://www.doe.mass.edu/frameworks/observation/ela-g1.pdf",
+ st:["Engages with developmentally appropriate complex texts, including texts read aloud by the teacher.","Asks and answers questions to clarify, and compares characters and two texts on the same topic.","Sorts and categorizes words by attributes and distinguishes shades of meaning among verbs, with guidance.","Holds discussions that build on others’ talk and describe key text details aloud.","Writes opinions with reasons, informative pieces with facts, and narratives with sequenced events."],
+ te:["Focuses attention on newly learned language (vocabulary, language complexity, conventions) and helps students understand text types.","Uses formative methods such as conferences and read-aloud responses.","Engages all students in challenging tasks, with drawing or writing in response to text."]},
+2:{u:"https://www.doe.mass.edu/frameworks/observation/ela-g2.pdf",
+ st:["Asks and answers questions to deepen understanding, and describes how characters respond to major events and challenges.","Identifies central messages, lessons, or morals in fables and folktales.","Compares versions of a story or two texts on the same topic, and works with word relationships and nuance.","Holds discussions with rules and builds on others’ talk.","Writes opinions with reasons and linking words, informative pieces with facts and definitions, and narratives with details and dialogue."],
+ te:["Selects appropriate complex texts and highlights when an author uses words to suggest feeling.","Connects reading, writing, speaking, and listening.","Provides structures for students to share ideas, uses writing and oral responses during reading group as evidence, and provides exemplars such as mentor texts."]},
+3:{u:"https://www.doe.mass.edu/frameworks/observation/ela-g3.pdf",
+ st:["Asks and answers questions that reference the text explicitly; retells stories, fables, folktales, and myths; identifies the central message and main idea with key details.","Works out the meaning of words and phrases, including literal versus figurative language and academic and domain-specific words.","Examines character traits, motivations, and feelings, and compares themes, settings, and plots.","Holds discussions that build on others’ ideas, ask and answer questions, and offer elaboration.","Has extended writing time for opinions with reasons, informative pieces with definitions and details, and narratives with descriptive details."],
+ te:["Selects complex texts, for example texts with metaphorical language, and focuses attention on academic language and vocabulary.","Makes connections between reading, writing, speaking, and listening.","Uses writing and oral responses during reading group as formative assessment, and has students support opinions with evidence."]}};
+var WTLG="K";
+function vWtl(){
+  var d=WTL[WTLG],gs=["K","1","2","3"];
+  var btns='<div class="row" role="group" aria-label="Grade">'+gs.map(function(x){return '<button type="button" class="btn sm'+(String(x)===String(WTLG)?'':' ghost')+'" data-act="wtl-g" data-g="'+x+'" aria-pressed="'+(String(x)===String(WTLG)?'true':'false')+'">'+(x==="K"?"Kindergarten":"Grade "+x)+'</button>';}).join("")+'</div>';
+  return '<h3>Grade-level look-fors: DESE What to Look For, ELA</h3>'+
+    '<p class="lede">A summary of what DESE’s observation guide describes for the selected grade, for coaches, principals, and teachers. The guide is organized by Read, Talk, Write, and Think. This is a paraphrase, not the full guide.</p>'+
+    btns+'<div class="grid2">'+card("What students are doing",ul(d.st))+card("What the teacher is doing",ul(d.te))+'</div>'+
+    '<p class="small muted">Source: '+ext(d.u,'DESE, What to Look For ELA '+(WTLG==="K"?"Kindergarten":"Grade "+WTLG))+'. The guides tie to Standard II, Indicator E (Expectations); Standard I, Indicator B (Assessment); and Standard II, Indicator A (Instruction). The split between student and teacher actions is our reading of the guide’s tables.</p>';
+}
+function vToolbox(){
+  return sec("School-Based Systems Toolbox","Draft structures for schools, grade levels, and teachers. Adapt to your building schedule and contract.",
+    '<h3>PLC structures</h3>'+
+    '<details open><summary>BOY data reflection protocol (about 45 minutes)</summary><div><ol class="tight"><li><strong>10 min.</strong> Read the look-for, the Spring 2026 and Fall 2026 results, and the benchmark. Note what surprised you.</li><li><strong>15 min.</strong> Reflect on the questions below.</li><li><strong>15 min.</strong> Choose next action steps that build on strengths and address gaps.</li><li><strong>5 min.</strong> Assign owners and a check-in date.</li></ol><p class="small"><strong>Reflection questions from the Fall 2026 data stepback:</strong></p>'+ul(['What key actions did we implement over last spring, this summer, and/or the start of this school year to impact these look-fors?','What was the effect of those actions?','Did we accurately predict the effect? Why or why not?','Were there any missed opportunities?','What are the next action steps needed to continue building on strengths and address gaps?'])+'<p class="small muted">Timing is a suggestion. The questions come from the district data stepback.</p></div></details>'+
+    '<details><summary>Read Aloud Study PLC (45 minutes)</summary><div><ol class="tight"><li><strong>5 min.</strong> Review norms and name the focus look-for.</li><li><strong>10 min.</strong> Read the lesson individually and mark think-aloud stops.</li><li><strong>10 min.</strong> Rehearse a think-aloud in triads.</li><li><strong>10 min.</strong> Plan vocabulary words and the question sequence.</li><li><strong>5 min.</strong> Each teacher commits to one thing to try.</li><li><strong>5 min.</strong> Set the next meeting’s focus.</li></ol></div></details>'+
+    '<details><summary>Think-aloud practice protocol (about 30 minutes)</summary><div><ol class="tight"><li>Presenter reads a short passage and models a 60-second think-aloud.</li><li>Listeners record the strategy and the words that triggered it.</li><li>Feedback: I noticed ___. One next step is ___.</li><li>Rotate so everyone presents. Close by naming one change for tomorrow.</li></ol></div></details>'+
+    '<details><summary>Look-for calibration protocol (about 30 minutes)</summary><div><ol class="tight"><li>Read one look-for aloud together.</li><li>Watch a short clip or read a transcript. Everyone writes evidence only, with no ratings.</li><li>Rate independently using the tool’s scale.</li><li>Compare ratings and discuss differences by pointing to evidence.</li><li>Agree on what Yes and Mostly look like for this look-for in your building.</li></ol></div></details>'+
+    '<h3>Small group coaching cycle</h3>'+
+    '<div class="grid2">'+
+    card("Four phases",'<ol class="tight"><li><strong>Plan (about 20 min).</strong> Choose one look-for and set a goal with the teacher.</li><li><strong>Observe or model (15 to 25 min).</strong> Collect evidence of that look-for only.</li><li><strong>Debrief (20 to 30 min).</strong> Name what students did, then choose one next step.</li><li><strong>Follow up (1 to 2 weeks).</strong> Teacher practices; the CIT checks in.</li></ol><p class="small muted">Suggested cycle length: four to six weeks.</p>')+
+    card("Small group version",ul(["Three or four teachers in one grade share a focus look-for.","Teachers take turns hosting a lesson.","Debrief together using the same evidence and next-step format.","Record the cycle in the Coaching Tracker."]))+
+    '</div>'+
+    '<h3>Scheduling to maximize collaboration</h3>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Week</th><th>Grade-level PLC (45 min)</th><th>Coaching or visit</th></tr></thead><tbody>'+
+    '<tr><td class="k">Week 1</td><td>Study the lesson and mark stops.</td><td>CIT observes or models in one or two classrooms.</td></tr>'+
+    '<tr><td class="k">Week 2</td><td>Practice think-alouds in triads.</td><td>Peer visits of about 20 minutes, covered by CIT or specialist.</td></tr>'+
+    '<tr><td class="k">Week 3</td><td>Calibrate on one look-for and plan vocabulary.</td><td>Coaching debriefs.</td></tr>'+
+    '<tr><td class="k">Week 4</td><td>Review data and choose the next focus.</td><td>Principal walkthrough with look-fors.</td></tr>'+
+    '</tbody></table></div>'+
+    ul(["Use common planning blocks by grade.","Stagger specials and push-in schedules to free coaches and specialists.","Use flexible staff to cover short peer visits."])+
+    '<p class="small muted">A sample rotation, not a requirement. Confirm against your master schedule and contract.</p>'+
+    '<h3>Proposed expectations by role</h3><p class="lede">Draft for PRISM ELL Subteam 3 review.</p>'+
+    '<div class="grid2">'+
+    expCard("teacher","Classroom teachers",["Plan two or three think-aloud stops and three to five words before each read aloud.","Use the shared vocabulary routine.","Reflect with the checklist and choose one next step.","Take part in PLC and coaching."])+
+    expCard("support","Support teachers (ELD, SPED, MLE)",["Co-plan supports with the classroom teacher.","Use the same stems and routine language.","Share what worked for which students."])+
+    expCard("cit","CITs and specialists",["Coach one look-for at a time.","Model and observe, using evidence only.","Record cycles in the tracker.","Share patterns, not names, with principals."])+
+    expCard("principal","Principals",["Protect PLC and coaching time.","Visit read alouds with the look-fors.","Start debriefs with what the teacher asked to try.","Review progress monthly with the CIT."])+
+    expCard("district","District leaders",["Provide shared guidance and exemplars.","Analyze and strengthen curriculum maps.","Monitor BOY, MOY, and spring trends.","Remove scheduling and resource barriers."])+
+    '</div>'+vWtl());
+}
+function vReflect(){
+  var html=CHECK.map(function(c){
+    var lf=LF.filter(function(l){return l.id===c.id;})[0];
+    return card('<span class="chip code">'+lf.code+'</span> '+lf.short,'<div class="checks">'+c.items.map(function(it,i){var k=c.id+"-"+i;return '<label><input type="checkbox" data-chk="'+k+'" id="ck-'+k+'"'+(S.check.done[k]?' checked':'')+'><span>'+it+'</span></label>';}).join("")+'</div>');
+  }).join("");
+  return sec("Look-For Self-Reflection","Use after a read aloud. Check what you saw yourself and your students do, then choose one small next step. This is a reflection tool, not a rating.",
+    '<div class="grid2">'+html+'</div>'+
+    '<div class="card">'+sel("check.focus","Next small step focuses on",FOCUS_OPTS)+txt("check.step","My next small step",3)+
+    '<div class="row"><span class="chip" id="chk-count"></span><button type="button" class="btn sm" data-act="copy-check">Copy summary</button><button type="button" class="btn ghost sm" data-act="clear-check">Clear checks</button></div><div id="copy-fb"></div></div>');
+}
+function vTrack(){
+  var rows=S.tracker.map(function(r,i){
+    return '<div class="entry">'+inp("tracker."+i+".date","Date","date",'id="tr-'+i+'-date"')+inp("tracker."+i+".teacher","Teacher (name or initials)","text",'id="tr-'+i+'-teacher"')+inp("tracker."+i+".grade","Grade","text",'id="tr-'+i+'-grade"')+
+      sel("tracker."+i+".focus","Focus look-for",FOCUS_OPTS)+
+      txt("tracker."+i+".goal","Goal",2).replace('<label class="f">','<label class="f wide">')+txt("tracker."+i+".evidence","Evidence",2).replace('<label class="f">','<label class="f wide">')+txt("tracker."+i+".next","Next step",2).replace('<label class="f">','<label class="f wide">')+
+      '<button type="button" class="btn danger sm" data-act="del-row" data-list="tracker" data-i="'+i+'">Remove</button></div>';
+  }).join("");
+  var counts=FOCUS_OPTS.map(function(o){var n=S.tracker.filter(function(r){return r.focus===o;}).length;return '<span class="chip">'+o+': '+n+'</span>';}).join(" ");
+  return sec("Coaching Cycle Tracker","For CITs, principals, and specialists. Entries stay in this browser only. Do not enter student names or identifiable student data.",
+    '<div class="row">'+counts+'</div>'+rows+
+    '<div class="row"><button type="button" class="btn ghost sm" data-act="add-row" data-list="tracker">Add an entry</button><button type="button" class="btn sm" data-act="copy-track">Copy for a spreadsheet</button></div><div id="copy-fb"></div>');
+}
+function vResources(){
+  var pd=S.pd.map(function(r,i){return '<div class="entry">'+inp("pd."+i+".date","Date","date",'id="pd-'+i+'-date"')+inp("pd."+i+".title","Session","text",'id="pd-'+i+'-title"')+inp("pd."+i+".note","Audience or location","text",'id="pd-'+i+'-note"')+'<button type="button" class="btn danger sm" data-act="del-row" data-list="pd" data-i="'+i+'">Remove</button></div>';}).join("");
+  var links=S.links.map(function(r,i){var u=String(r.url||"");var ok=/^https:\/\//i.test(u);return '<div class="entry">'+inp("links."+i+".title","Title","text",'id="ln-'+i+'-title"')+'<label class="f"><span>Link</span><input type="text" data-k="links.'+i+'.url" data-url="1" value="'+esc(u)+'" id="ln-'+i+'-url" placeholder="https://"></label>'+inp("links."+i+".note","Note","text",'id="ln-'+i+'-note"')+'<div class="row"><a class="open" target="_blank" rel="noopener noreferrer" '+(ok?'href="'+esc(u)+'"':'hidden')+'>Open link</a><button type="button" class="btn danger sm" data-act="del-row" data-list="links" data-i="'+i+'">Remove</button></div></div>';}).join("");
+  return sec("Professional Learning and Resources","Add district PD dates and other links as they are confirmed. Research, webinars, training videos, and exemplar lessons have their own tabs. Nothing below is pre-filled.",
+    '<h3>Data sources</h3>'+card("",ul(['Fall 2026 PRISM I Progress Monitoring, Data Stepback for District and CBO Leaders (October 28, 2026).','DESE Early Literacy Observation Tool (linked on slide 6 of the data stepback). Add the link in the table below.','Full BOY 26-27 Lynn PRISM I walkthrough data set (linked on the last slide of the data stepback). Add the link in the table below.']))+'<h3>Deliverable status</h3><div class="grid3">'+
+    '<div class="ph"><span class="chip" style="align-self:flex-start">Draft</span><strong style="color:var(--fg)">Instructional Support Toolbox</strong><span>PRISM ELL Subteam 3. This dashboard.</span></div></div>'+
+    '<h3>MCAS 2027 resources</h3>'+card("",ul([ext(WEBINAR,'Webinar: 2027 test design changes, grades 3-8 ELA'),ext(DESEELA,'DESE ELA test design page'),'<a href="#mcas">Grade 3 summary on this dashboard</a>']))+'<h3>District professional learning, SY26-27</h3>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Session: Deepening Our Vision of Strong Read Alouds</th><th>Instructional core connections</th></tr></thead><tbody>'+
+    [["Dec 1-3, 2026","Impactful Vocabulary Routines and Read Alouds","Rigorous, grade-level learning; culturally and linguistically responsive instruction; responsive, scaffolded, differentiated instruction"],
+     ["Feb 2-4, 2027","Think Alouds and Gradual Release","Rigorous, grade-level learning; students do the thinking and talking; responsive, scaffolded, differentiated instruction"],
+     ["Mar 9-11, 2027","Utilizing High-Quality Questions and Tasks","Rigorous, grade-level learning; students do the thinking and talking; responsive, scaffolded, differentiated instruction"],
+     ["Apr 6-8, 2027","Scaffolded Text-Based Questions Across Multiple Reads","Rigorous, grade-level learning; students do the thinking and talking; responsive, scaffolded, differentiated instruction"]].map(function(r){return '<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>';}).join("")+'</tbody></table></div>'+
+    card("Job-embedded learning days",ul(['Each series runs three days. Day 1: professional learning for principals, program specialists, and CITs, one 2.5-hour session offered twice (8:00 to 10:30 or 11:15 to 1:45) at 195 Market Street, 1st Floor PD Room.','Day 2: job-embedded instructional leadership support for principals and program specialists (Dec 2, Feb 3, Mar 10, Apr 7). Schools to be determined.','Day 3: job-embedded instructional coaching support for CITs (Dec 3, Feb 4, Mar 11, Apr 8). Schools to be determined.','Coming soon from the district: updated K-3 literacy curriculum maps and an LPS best practices video library. Lesson preparation, internalization, and data analysis templates are on the Elementary ELA/Reading Resource Hub.']))+
+    '<p class="small muted">Source: Tier 1 Reading Comprehension Instruction: District Guidance and Expectations, SY26-27 (Lynn Public Schools).</p>'+
+    '<h3>Your school’s PD dates</h3>'+pd+'<div><button type="button" class="btn ghost sm" data-act="add-row" data-list="pd">Add a session</button></div>'+
+    '<h3>Other links</h3>'+links+'<div><button type="button" class="btn ghost sm" data-act="add-row" data-list="links">Add a resource</button></div>');
+}
+var WEBINAR="https://mcas.onlinehelp.cognia.org/training-webinars-2027-test-design-changes-3-8-ELA/";
+var DESEELA="https://www.doe.mass.edu/mcas/tdd/ela.html";
+function ext(u,t){return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+t+'</a>';}
+function vMcas(){
+  var note=(S.band==="pk"||S.band==="k"||S.band==="1")?'<p class="small"><span class="chip gold">Note</span> Grade 3 is the first tested grade. This page is for grade 3 teachers and the teams who support them.</p>':'';
+  var time=[["2025","Began passage finding and development of new test questions."],["Spring 2026","Field tested passages and new items."],["Summer 2026","Reviewed field test data with teacher committees."],["Spring 2027","First operational year of the new test with new item types."]];
+  var plan=[["Long","12","1","17"],["Medium","9","1","14"],["Short","5","NA","5"],["Short","5","NA","5"],["Stand-alone","9","NA","9"]];
+  return sec("MCAS 2027 ELA Test Design (Grade 3)",
+    "The grades 3-8 ELA test changes in Spring 2027. Grade 3 is our first tested grade, so this page puts the anticipated design in one place for grade 3 teachers. Source: DESE Office of Student Assessment Services, May 11, 2026. The design is anticipated and DESE may update it.",
+    note+
+    '<div class="row"><a class="btn" href="'+WEBINAR+'" target="_blank" rel="noopener noreferrer">Watch the DESE webinar</a><a class="btn ghost" href="'+DESEELA+'" target="_blank" rel="noopener noreferrer">DESE ELA test design page</a></div>'+
+    '<div class="panel"><h3>At a glance for grade 3</h3>'+ul([
+      'Two sessions, 50 points total, with reading, writing, and language reporting categories.',
+      'No essay. Grades 3-5 have two extended-response questions instead, one with a long passage set and one with a medium passage set.',
+      'Shorter reading passages, plus new stand-alone questions that are not tied to a passage.',
+      'All selected-response questions are worth 1 point. Two-point selected-response questions are gone.',
+      'Narrative writing is no longer assessed on MCAS. Keep assessing it locally.'])+'</div>'+
+    '<h3>Timeline</h3><div class="tbl-wrap"><table><thead><tr><th>Timeframe</th><th>Activity</th></tr></thead><tbody>'+time.map(function(r){return '<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td></tr>';}).join("")+'</tbody></table></div>'+
+    '<h3>Test blueprint, grades 3-5</h3><div class="tbl-wrap"><table><thead><tr><th>Passage set</th><th>Selected-response (1 point each)</th><th>Extended-response (5 points)</th><th>Total points</th></tr></thead><tbody>'+
+    plan.map(function(r){return '<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join("")+
+    '<tr><td class="k">Total</td><td>40</td><td>2</td><td><strong>50</strong></td></tr></tbody></table></div>'+
+    '<h3>New question types</h3><div class="grid2">'+
+    card("Passage sets",ul(['Three sizes: short (no writing), medium (writing, new), and long (writing).','Each test has one long set, one medium set, and two short sets.','Passages are literary and informational.']))+
+    card("Stand-alone questions (new)",ul(['Independent questions that are not tied to a passage, worth 1 point.','They assess grade-level language standards, including Standard English grammar, mechanics, and usage.','Nine stand-alone questions on the grades 3-5 test.']))+
+    card("Revised selected-response",ul(['Passage-based or stand-alone, aligned to a reading or a language standard.','Worth 1 point each.','Formats: multiple-choice, multi-select, and technology-enhanced (such as hot text, drag-and-drop, and inline choice).']))+
+    card("Extended-response (new)",ul(['Passage-based and worth 5 points: 3 for writing (written expression) and 2 for language (conventions).','Grades 3-5 assess explanatory or opinion writing, in the medium and long passage sets.','Expected length: DESE lists about one paragraph or 450 words for grade 3, and about one to two paragraphs or 450 words for grades 4-5.']))+
+    '</div>'+
+    '<h3>DESE sample items</h3><div class="grid2">'+
+    card("Stand-alone example (DESE grade 4 sample)",'<p>Read the sentences: <em>The classroom’s bookcase was big. The classroom’s bookcase held many books.</em></p><p>What is the correct way to combine the sentences?</p><ol class="tight" type="A"><li>The classroom’s bookcase was big if held many books.</li><li>The classroom’s bookcase was big or held many books.</li><li>The classroom’s bookcase was big also held many books.</li><li><strong>The classroom’s bookcase was big and held many books.</strong> (correct)</li></ol>')+
+    card("Extended-response directions (DESE grade 5 sample)",'<p>Students are told to write a response of about one to two paragraphs and to:</p>'+ul(['Include an opinion based on the passage.','Use evidence from the passage to support the opinion.','Use correct grammar, spelling, and punctuation.'])+'<p class="small muted">This is a grade 5 sample. DESE planned to post new practice tests with student samples at different score points, and extended-response rubrics, in Fall 2026. Check the DESE page for what is available now.</p>')+
+    '</div>'+
+    '<h3>Connections to our read aloud look-fors</h3>'+
+    card("Our reading of the design, not DESE guidance",ul([
+      'Extended responses ask students to support an opinion or explanation with evidence from the passage. Modeling how to find evidence (the Fall 2026 gap on 3B.6 and 3B.2) builds the skill before students write.',
+      'Grade 3 responses are about one paragraph, so oral rehearsal and sentence frames from read alouds can carry into written responses.',
+      'Stand-alone questions assess grammar, mechanics, and usage, so short, regular language work (such as combining sentences) fits daily instruction.']))+
+    '<h3>Updates and contacts</h3><div class="grid2">'+
+    card("Coming from DESE",ul(['Fall 2026: new practice tests with student samples at different score points, and extended-response rubrics (essay rubrics stay the same).','Fall 2026 and Winter 2027: additional ELA webinars with updated resources.','The ELA MCAS Transition page lists the timeline, anticipated test design, and frequently asked questions, and DESE will update it as materials become available.']))+
+    card("Questions",ul(['Email adc@mass.gov or call 781-338-3625 (DESE Office of Student Assessment Services).',ext(WEBINAR,'Webinar: 2027 test design changes, grades 3-8 ELA'),ext(DESEELA,'DESE ELA test design page')]))+
+    '</div>');
+}
+/* ---------- shared library (db + assets) ---------- */
+var LIBCFG={
+ research:{title:"Research Articles",lede:"Articles, reports, and briefs that support think-alouds, vocabulary instruction, text-based questioning, and UDL. Add a link, upload a PDF, or both.",m1:"Authors",m2:"Year or source",add:"Add an article",empty:"No articles yet.",hint:"Add the first article with a link or a PDF."},
+ webinars:{title:"Webinars",lede:"Recordings, slides, and links to webinars for teachers and leaders. Add a link, upload slides, or both.",m1:"Presenter or host",m2:"Date",add:"Add a webinar",empty:"No webinars yet.",hint:"Add a recording link or slides."},
+ videos:{title:"Teacher Training Videos",lede:"Think-Aloud Modeling PD Video Collection (K-5): short classroom models and coaching clips, most under 7 minutes. Suggested routine for any clip: before viewing, name the look-for; while viewing, jot the teacher's exact think-aloud language (\"I'm noticing...\", \"I wonder...\"); after viewing, plan a think-aloud for an upcoming text and mark 3 to 4 stopping points. Key point: the \"I do\" is a monologue. Students watch and listen, then practice in the \"we do.\" Links were confirmed on 11/8/2026 but not every video was watched in full, so preview before using in PD. No strong, verified K-5 writing think-aloud video was found; the best lead is the IES Toolkit to Support Evidence-Based Writing Instruction (Grades 2-4). You can also upload an MP4 or WebM file (up to 20 MB) or link to a longer video.",m1:"Presenter or school",m2:"Length (minutes)",add:"Add a video",empty:"No training videos yet.",hint:"Add a video file or a link."},
+ lessons:{title:"Exemplar Lessons",lede:"Model read aloud lessons that show think-alouds, vocabulary routines, and text-based questions. Upload a lesson plan as a PDF or a short video, or add a link.",m1:"Text or unit",m2:"Teacher or school",add:"Add an exemplar lesson",empty:"No exemplar lessons yet.",hint:"Add a lesson plan, video, or link."}
+};
+var LIBFOCUS=["3B.2 Think-alouds","3B.3 Vocabulary","3B.5 Grade-level access","3B.6 Literal to inferential","Whole group and small group","UDL","Multilingual learners","Students with disabilities","MCAS","Other"];
+var LIBGRADE=["PK-3","PK-1","2-3"];
+var MT={pdf:"application/pdf",mp4:"video/mp4",webm:"video/webm",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",csv:"text/csv",md:"text/markdown",txt:"text/plain",json:"application/json"};
+var LIB={ready:false,db:null,assets:null,user:null,canWrite:null,myId:"",items:[],loaded:false,slow:false,err:"",sub:null,busy:false};
+var SNAP=[{"id": "mcas", "d": {"type": "webinars", "title": "MCAS Grades 3-8 ELA: 2027 Test Design Changes", "desc": "DESE webinar on the 2027 ELA test design changes.", "meta1": "DESE Office of Student Assessment Services", "meta2": "May 11, 2026", "url": "https://mcas.onlinehelp.cognia.org/training-webinars-2027-test-design-changes-3-8-ELA/", "grade": "2-3", "focus": "MCAS"}}, {"id": "r01", "d": {"type": "research", "title": "Rice & Wijekumar (2024)", "desc": "Core evidence for text-based questioning. Found inference instruction worked no differently across multilingual status, so inferential questioning is appropriate for multilingual learners. Labels: HOQ.", "meta1": "Rice, M., & Wijekumar, K.", "meta2": "2024", "url": "https://eric.ed.gov/?id=EJ1423349", "grade": "PK-3", "focus": "3B.6 Literal to inferential"}}, {"id": "r02", "d": {"type": "research", "title": "Mosher & Kim (2023)", "desc": "Read-aloud study that combines several practices; one of the closest to an integrated model. Labels: TA, VOC.", "meta1": "Mosher, E., & Kim, J.", "meta2": "2023", "url": "https://scholar.google.com/scholar?q=Mosher+Kim+2023+structured+read-aloud+supplement+reading+comprehension", "grade": "PK-3", "focus": "3B.2 Think-alouds"}}, {"id": "r03", "d": {"type": "research", "title": "Mosher, Burkhauser, & Kim (2024)", "desc": "Supports vocabulary instruction. Labels: VOC.", "meta1": "Mosher, E., Burkhauser, M., & Kim, J.", "meta2": "2024", "url": "https://scholar.google.com/scholar?q=Mosher+Burkhauser+Kim+2024+vocabulary+read+aloud", "grade": "PK-3", "focus": "3B.3 Vocabulary"}}, {"id": "r04", "d": {"type": "research", "title": "Hwang, Cabell, & Joyner (2022)", "desc": "Supports vocabulary instruction. Labels: VOC.", "meta1": "Hwang, H., Cabell, S. Q., & Joyner, R. E.", "meta2": "2022", "url": "https://www.tandfonline.com/doi/abs/10.1080/10888438.2021.1954005", "grade": "PK-3", "focus": "3B.3 Vocabulary"}}, {"id": "r05", "d": {"type": "research", "title": "Duke, Ward, & Pearson (2021)", "desc": "Layered model of comprehension instruction; one of the closest to an integrated model. Labels: TA, VOC, HOQ.", "meta1": "Duke, N. K., Ward, A. E., & Pearson, P. D.", "meta2": "2021", "url": "https://ila.onlinelibrary.wiley.com/doi/10.1002/trtr.1993", "grade": "PK-3", "focus": "3B.2 Think-alouds"}}, {"id": "r06", "d": {"type": "research", "title": "Rice (2024), The Reading Teacher", "desc": "Supports text-based questioning and think-alouds. Labels: HOQ, TA.", "meta1": "Rice, M.", "meta2": "2024, The Reading Teacher", "url": "https://ila.onlinelibrary.wiley.com/doi/full/10.1002/trtr.2353", "grade": "PK-3", "focus": "3B.6 Literal to inferential"}}, {"id": "r07", "d": {"type": "research", "title": "Shanahan et al. (2010), IES K-3 Practice Guide", "desc": "Federal practice guide for K-3 reading; combines several practices. Labels: TA, HOQ.", "meta1": "Shanahan, T., et al.", "meta2": "2010, IES Practice Guide", "url": "https://ies.ed.gov/ncee/wwc/practiceguide/14", "grade": "PK-3", "focus": "3B.2 Think-alouds"}}, {"id": "r08", "d": {"type": "research", "title": "Ness (2016) and Think Big with Think Alouds", "desc": "Supports teacher think-alouds. Labels: TA.", "meta1": "Ness, M.", "meta2": "2016", "url": "https://books.google.com/books/about/Think_Big_with_Think_Alouds.html?id=tXlZDwAAQBAJ", "grade": "PK-3", "focus": "3B.2 Think-alouds"}}, {"id": "r09", "d": {"type": "research", "title": "Kucan & Beck (1997)", "desc": "Supports think-alouds. Labels: TA.", "meta1": "Kucan, L., & Beck, I. L.", "meta2": "1997", "url": "https://journals.sagepub.com/doi/10.3102/00346543067003271", "grade": "PK-3", "focus": "3B.2 Think-alouds"}}, {"id": "r10", "d": {"type": "research", "title": "Beck & McKeown (2001), Text Talk", "desc": "Read-aloud model that combines think-aloud style talk, vocabulary, and questions; one of the closest to an integrated model. Labels: TA, VOC, HOQ.", "meta1": "Beck, I. L., & McKeown, M. G.", "meta2": "2001", "url": "https://eric.ed.gov/?id=EJ632232", "grade": "PK-3", "focus": "3B.3 Vocabulary"}}, {"id": "r11", "d": {"type": "research", "title": "Beck & McKeown (2007)", "desc": "Supports vocabulary instruction. Labels: VOC.", "meta1": "Beck, I. L., & McKeown, M. G.", "meta2": "2007", "url": "https://www.journals.uchicago.edu/doi/10.1086/511706", "grade": "PK-3", "focus": "3B.3 Vocabulary"}}, {"id": "r12", "d": {"type": "research", "title": "Elleman (2017)", "desc": "Inference instruction. Less skilled readers made much larger literal-comprehension gains than skilled readers, so it is relevant to students with disabilities. Labels: HOQ.", "meta1": "Elleman, A. M.", "meta2": "2017", "url": "https://eric.ed.gov/?id=EJ1149970", "grade": "PK-3", "focus": "3B.6 Literal to inferential"}}, {"id": "r13", "d": {"type": "research", "title": "Peterson & Taylor (2012)", "desc": "Supports high-quality questioning. Labels: HOQ.", "meta1": "Peterson, D. S., & Taylor, B. M.", "meta2": "2012", "url": "https://doi.org/10.1002/TRTR.01045", "grade": "PK-3", "focus": "3B.6 Literal to inferential"}}, {"id": "r14", "d": {"type": "research", "title": "Taylor, Pearson, Peterson, & Rodriguez (2003)", "desc": "Supports high-quality questioning. Labels: HOQ.", "meta1": "Taylor, B. M., Pearson, P. D., Peterson, D. S., & Rodriguez, M. C.", "meta2": "2003", "url": "https://www.journals.uchicago.edu/doi/10.1086/499740", "grade": "PK-3", "focus": "3B.6 Literal to inferential"}}, {"id": "r15", "d": {"type": "research", "title": "Murphy et al. (2009)", "desc": "Supports high-quality questioning and discussion. Labels: HOQ.", "meta1": "Murphy, P. K., et al.", "meta2": "2009", "url": "https://eric.ed.gov/?id=EJ861185", "grade": "PK-3", "focus": "3B.6 Literal to inferential"}}, {"id": "r16", "d": {"type": "research", "title": "Teaching Academic Content and Literacy to English Learners in Elementary and Middle School (IES Practice Guide, NCEE 2014-4012)", "desc": "Anchor document for multilingual learner instruction. Four recommendations: teach a set of academic words intensively over several days with varied activities; integrate oral and written English into content teaching; provide regular structured writing; provide small-group intervention for students who struggle. Directly supports a multi-day vocabulary routine. Labels: VOC, HOQ, SCAF.", "meta1": "Baker, S., Lesaux, N., et al.", "meta2": "2014, IES Practice Guide", "url": "https://ies.ed.gov/ncee/wwc/practiceguide/19", "grade": "PK-3", "focus": "Multilingual learners"}}, {"id": "r17", "d": {"type": "research", "title": "Shared book reading interventions with English learners: A meta-analysis", "desc": "54 U.S. studies found a significant positive effect of shared reading on English learners' outcomes, and the effect held under stricter criteria. Strongest multilingual learner evidence for interactive read-alouds. Labels: TA, VOC.", "meta1": "Fitton, L., McIlraith, A. L., & Wood, C. L.", "meta2": "2018, Review of Educational Research, 88(5), 712-751", "url": "https://journals.sagepub.com/doi/10.3102/0034654318790909", "grade": "PK-3", "focus": "Multilingual learners"}}, {"id": "r18", "d": {"type": "research", "title": "Are reading interventions for English language learners effective? A meta-analysis", "desc": "Reading interventions improve ELLs' reading skills and should not be postponed until students reach a certain level of oral English proficiency. Useful if staff believe multilingual learners need to wait for comprehension instruction. Labels: SCAF.", "meta1": "Ludwig, C., Guo, K., & Georgiou, G. K.", "meta2": "2019, Journal of Learning Disabilities, 52(3)", "url": "https://pubmed.ncbi.nlm.nih.gov/30694092", "grade": "PK-3", "focus": "Multilingual learners"}}, {"id": "r19", "d": {"type": "research", "title": "The efficacy of comprehension and vocabulary focused professional development on English learners' literacy", "desc": "Randomized study (upper-elementary social studies): ELs whose teachers received the PD outperformed ELs in typical classrooms. Practices: key words through pictures and short videos, many chances to practice by speaking, reading, writing, and peer work, plus models and cues. The effect held when schools supported PD follow-up. Labels: VOC, HOQ, SCAF.", "meta1": "Vaughn, S., Swanson, E., Fall, A.-M., Roberts, G., Capin, P., Stevens, E. A., & Stewart, A. A.", "meta2": "2022, Journal of Educational Psychology, 114(2), 257-272", "url": "https://eric.ed.gov/?id=ED618777", "grade": "PK-3", "focus": "Multilingual learners"}}, {"id": "r20", "d": {"type": "research", "title": "Closing the gap: Addressing the vocabulary needs of English-language learners in bilingual and mainstream classrooms", "desc": "Fifth-grade, 15-week program. Weekly target words taught through text, cognates, morphology, and multiple-meaning words; ELLs and native English speakers both gained in word knowledge and comprehension. Strong case for Spanish-English cognates as a scaffold. Labels: VOC, SCAF.", "meta1": "Carlo, M. S., August, D., et al.", "meta2": "2004, Reading Research Quarterly, 39(2), 188-215", "url": "https://ila.onlinelibrary.wiley.com/doi/abs/10.1598/RRQ.39.2.3", "grade": "PK-3", "focus": "Multilingual learners"}}, {"id": "r21", "d": {"type": "research", "title": "Providing Reading Interventions for Students in Grades 4-9 (WWC 2022-007)", "desc": "Most current federal guidance for students with reading difficulties (includes grades 4-5). Comprehension recommendation: build world and word knowledge; have students ask and answer questions about the text; teach a routine for finding the gist of a short section; teach comprehension monitoring. Also recommends stretch texts, which supports keeping students with disabilities in grade-level text with support. Labels: VOC, HOQ, TA, SCAF.", "meta1": "Vaughn, S., Gersten, R., et al.", "meta2": "2022, What Works Clearinghouse practice guide", "url": "https://ies.ed.gov/ncee/wwc/practiceguide/29", "grade": "PK-3", "focus": "Students with disabilities"}}, {"id": "r22", "d": {"type": "research", "title": "Reading comprehension instruction for students with learning disabilities, 1995-2006: A meta-analysis", "desc": "Effects for questioning and strategy instruction, fundamental reading skills, and text enhancements were moderate to high. Common thread: teaching students to attend carefully and think systematically while reading, since most students with LD do not use these strategies on their own. A direct case for explicit think-aloud modeling. Labels: HOQ, TA, SCAF.", "meta1": "Berkeley, S., Scruggs, T. E., & Mastropieri, M. A.", "meta2": "2010, Remedial and Special Education, 31(6), 423-436", "url": "https://www.readingrockets.org/resources/resource-library/reading-comprehension-instruction-students-learning-disabilities-1995", "grade": "PK-3", "focus": "Students with disabilities"}}, {"id": "r23", "d": {"type": "research", "title": "Inference instruction for struggling readers: A synthesis of intervention research", "desc": "Interventions worked across grades 2-9, for students labeled LD and for struggling readers without the label, regardless of socioeconomic status. Many effective interventions taught context clues and key words and used key words to answer post-reading questions: a concrete, teachable scaffold for inferential questions. Labels: HOQ, SCAF.", "meta1": "Hall, C. S.", "meta2": "2016, Educational Psychology Review, 28(1), 1-22", "url": "https://link.springer.com/article/10.1007/s10648-014-9295-x", "grade": "PK-3", "focus": "Students with disabilities"}}, {"id": "r24", "d": {"type": "research", "title": "What research says about vocabulary instruction for students with learning disabilities", "desc": "Keyword and mnemonic methods, cognitive strategies such as semantic feature analysis, direct instruction, constant time delay, and activity-based methods were generally effective. Deep word knowledge may take up to 12 exposures, and students with LD may need more, which strengthens the case for a consistent, repeated routine. Labels: VOC, SCAF.", "meta1": "Jitendra, A. K., Edwards, L. L., Sacks, G., & Jacobson, L. A.", "meta2": "2004, Exceptional Children, 70(3), 299-322", "url": "https://journals.sagepub.com/doi/abs/10.1177/001440290407000303", "grade": "PK-3", "focus": "Students with disabilities"}}, {"id": "r25", "d": {"type": "research", "title": "Teaching reading comprehension strategies to students with learning disabilities: A review of research", "desc": "Landmark review. Students with LD made meaningful comprehension gains when teachers explicitly modeled strategies by thinking aloud, then guided practice with feedback and gradually released responsibility. The classic citation for think-alouds with students with disabilities. Labels: TA, HOQ.", "meta1": "Gersten, R., Fuchs, L. S., Williams, J. P., & Baker, S.", "meta2": "2001, Review of Educational Research, 71(2), 279-320", "url": "https://journals.sagepub.com/doi/10.3102/00346543071002279", "grade": "PK-3", "focus": "Students with disabilities"}}, {"id": "r26", "d": {"type": "research", "title": "Should reading be taught whole class or small group?", "desc": "Reviews the grouping research and finds the case for daily small-group reading instruction far from certain. Compared at realistic total time, small groups lose their advantage because each group receives less teaching. His rule: never do with a small group what you could do just as well whole class. Literacy only; no recommended minutes. Labels: HOQ.", "meta1": "Shanahan, T.", "meta2": "2025 (reposted), Shanahan on Literacy", "url": "https://www.shanahanonliteracy.com/blog/should-reading-be-taught-whole-class-or-small-group-1", "grade": "PK-3", "focus": "Whole group and small group"}}, {"id": "r27", "d": {"type": "research", "title": "The hidden resource: How time allocation impacts reading instruction", "desc": "Practitioner recommendation for K-2 literacy: 120 minutes daily, made up of a 90-minute whole-class block plus 30 minutes of small-group instruction. The 90-minute block is supported by a cited source; the 30-minute add-on rests on the authors' experience. Literacy only. Labels: HOQ.", "meta1": "Parrish, J.", "meta2": "2023, Instruction Partners", "url": "https://instructionpartners.org/2023/07/26/the-hidden-resource-how-time-allocation-impacts-reading-instruction/", "grade": "PK-3", "focus": "Whole group and small group"}}, {"id": "r28", "d": {"type": "research", "title": "The Opportunity Myth: What students can show us about how school is letting them down", "desc": "Study of classrooms in five school systems. Students spent hundreds of hours a year on assignments that were not grade-appropriate, even when they could do grade-level work with support. Supports keeping the grade-level text and task in place and adding scaffolds (look-for 3B.5). Labels: HOQ.", "meta1": "TNTP", "meta2": "2018, TNTP", "url": "https://tntp.org/publications/view/student-experiences/the-opportunity-myth", "grade": "PK-3", "focus": "3B.5 Grade-level access"}}, {"id": "vid-01", "d": {"type": "videos", "title": "Think Alouds: Modeling Ways to Think About Text", "desc": "Classroom model. Modeling before, during, and after reading. Elementary. Group: Classroom models. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Balanced Literacy Diet (OISE, University of Toronto)", "meta2": "2:54", "url": "https://www.youtube.com/watch?v=G0ZHimY5YZo", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-02", "d": {"type": "videos", "title": "Think Aloud (Ms. Grimes)", "desc": "Classroom model. Grade 4, complex text. Featured by Reading Rockets; the page also links the full 15:36 version. Group: Classroom models. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Citizens Academy, Cleveland", "meta2": "5:42", "url": "https://www.readingrockets.org/classroom/classroom-strategies/think-alouds", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-03", "d": {"type": "videos", "title": "Interactive Read Aloud in First Grade", "desc": "Classroom model. Grade 1, The Octopuppy: think-alouds plus turn-and-talk. Group: Classroom models. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "FCPS ISD Language Arts", "meta2": "6:36", "url": "https://www.youtube.com/watch?v=QG79JeAr5UU", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-04", "d": {"type": "videos", "title": "Before, During and After Questions", "desc": "Classroom model. Elementary; questioning to build comprehension. Group: Classroom models. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Balanced Literacy Diet", "meta2": "5:48", "url": "https://www.youtube.com/watch?v=Sd1FlXxpVIw", "grade": "PK-3", "focus": "3B.6 Literal to inferential", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-05", "d": {"type": "videos", "title": "Using the Think Aloud Strategy", "desc": "Classroom model. K-2; a full read-aloud of April's Big Day with modeling. Group: Classroom models. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Ms. Hedquist (Mrs. Degrave's Class)", "meta2": "10:24", "url": "https://www.youtube.com/watch?v=Jsd5Lz0l5DQ", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-06", "d": {"type": "videos", "title": "Go beyond a model; reveal a Think Aloud", "desc": "Coaching clip. Show how you think, not just what to do. Group: Coaching clips. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Smekens Education", "meta2": "2:12", "url": "https://www.youtube.com/watch?v=UmhLgsBD1-I", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-07", "d": {"type": "videos", "title": "Think Alouds: A Comprehension Game-Changer", "desc": "Coaching clip. When, where, how, and why to think aloud. Group: Coaching clips. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Smekens Education", "meta2": "2:54", "url": "https://www.youtube.com/watch?v=-m2kSY7AJ8I", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-08", "d": {"type": "videos", "title": "Explicit Teaching: The Students' Role During a Think-Aloud", "desc": "Coaching clip. The \"I do\" is a monologue; students watch and listen. Group: Coaching clips. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Smekens Education", "meta2": "2:00", "url": "https://www.youtube.com/watch?v=qcae2Ns6j04", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-09", "d": {"type": "videos", "title": "Teach Explicitly: I do, You Watch & Listen", "desc": "Coaching clip. Where the think-aloud fits in the gradual release. Group: Coaching clips. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Smekens Education", "meta2": "5:30", "url": "https://www.youtube.com/watch?v=GnKCMztqGKQ", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-10", "d": {"type": "videos", "title": "Gradual Release Modeled Lesson: \"I Do\" Explicit Instruction", "desc": "Coaching clip. A full \"I do\" model using a think-aloud. Group: Coaching clips. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Tackling Teaching Together", "meta2": "6:48", "url": "https://www.youtube.com/watch?v=ZS2faYs-vzk", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-11", "d": {"type": "videos", "title": "Think Aloud for Read Aloud", "desc": "Longer option. Planning and teaching think-alouds with Diary of a Worm. Group: Longer and extra. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "ESC Region 13 (Megan Beth Hedgecock)", "meta2": "11:06", "url": "https://www.youtube.com/watch?v=wPsOK3Qg3dY", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-12", "d": {"type": "videos", "title": "Building Better Readers with Scaffolded Read Alouds", "desc": "Longer option. Read-alouds that model deeper thinking and discussion. Group: Longer and extra. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Edutopia", "meta2": "4:30", "url": "https://www.youtube.com/watch?v=UbZyJu3Xftw", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}, {"id": "vid-13", "d": {"type": "videos", "title": "Using a 'Think Aloud' to support pupils' problem-solving", "desc": "Extra. A think-aloud outside ELA, for cross-content PD. Group: Longer and extra. Links were confirmed on 11/8/2026; preview before using in PD.", "meta1": "Education Endowment Foundation (UK)", "meta2": "5:06", "url": "https://www.youtube.com/watch?v=17Iia-2yYW4", "grade": "PK-3", "focus": "3B.2 Think-alouds", "addedAt": "2026-11-08T14:00:00.000Z", "addedBy": ""}}];
+var LIBF={grade:"",focus:""};
+function opts(a){return a.map(function(o){return '<option>'+esc(o)+'</option>';}).join("");}
+function vLib(type){
+  var c=LIBCFG[type];
+  return sec(c.title,c.lede,
+    '<div id="lib-form"></div>'+
+    '<div class="lib-filters"><label class="f"><span>Grade band</span><select data-lf="grade"><option value="">All</option>'+opts(LIBGRADE)+'</select></label>'+
+    '<label class="f"><span>Focus</span><select data-lf="focus"><option value="">All</option>'+opts(LIBFOCUS)+'</select></label></div>'+
+    '<div id="lib-list" class="sec" aria-live="polite"></div>');
+}
+function paintForm(type){
+  var el=document.getElementById("lib-form"),c=LIBCFG[type];if(!el||!c)return;
+  if(!LIB.ready){el.innerHTML='<p class="small muted">Connecting to the shared library.</p>';return;}
+  if(!LIB.db){el.innerHTML='<p class="small muted">This is a shared copy of the dashboard. It shows the library as of November 6, 2026. New articles, webinars, videos, and lessons appear when an updated copy is shared.</p>';return;}
+  if(LIB.canWrite===false){el.innerHTML='<p class="small muted">You can view this library. Adding items needs Contributor access.</p>';return;}
+  var fileField=LIB.assets?'<label class="f wide"><span>File (optional)</span><input type="file" id="lf-file" accept=".pdf,.mp4,.webm,.png,.jpg,.jpeg,.gif,.webp,.csv,.md,.txt,.json"></label><p class="small muted wide" style="grid-column:1/-1">Accepted files: PDF, MP4 or WebM video, images, and text, up to 20 MB each. For Word or PowerPoint, save as PDF or add a link.</p>':
+    '<p class="small muted" style="grid-column:1/-1">Uploading files needs Editor access. You can still add a link.</p>';
+  el.innerHTML='<details><summary>'+c.add+'</summary><div class="entry">'+
+    '<label class="f wide"><span>Title</span><input type="text" id="lf-title" maxlength="200"></label>'+
+    '<label class="f wide"><span>Description</span><textarea id="lf-desc" rows="2" maxlength="1000"></textarea></label>'+
+    '<label class="f"><span>'+c.m1+'</span><input type="text" id="lf-m1" maxlength="200"></label>'+
+    '<label class="f"><span>'+c.m2+'</span><input type="text" id="lf-m2" maxlength="200"></label>'+
+    '<label class="f"><span>Grade band</span><select id="lf-grade">'+opts(LIBGRADE)+'</select></label>'+
+    '<label class="f"><span>Focus</span><select id="lf-focus"><option value=""></option>'+opts(LIBFOCUS)+'</select></label>'+
+    '<label class="f wide"><span>Link (optional, https only)</span><input type="text" id="lf-url" placeholder="https://" maxlength="1000"></label>'+
+    fileField+
+    '<p class="small muted" style="grid-column:1/-1">Do not upload student names, photos, or identifiable student information.</p>'+
+    '<div class="row wide" style="grid-column:1/-1"><button type="button" class="btn" id="lf-add" data-act="lib-add">Add to library</button><span id="lib-status" class="small muted" role="status"></span></div>'+
+    '</div></details>';
+}
+function fmtSize(n){if(!n)return "";return n>=1048576?(Math.round(n/104857.6)/10)+" MB":Math.max(1,Math.round(n/1024))+" KB";}
+function libCard(it){
+  var d=it.d||{},links=[],media="";
+  if(d.url&&/^https:\/\//i.test(d.url))links.push('<a class="btn sm" href="'+esc(d.url)+'" target="_blank" rel="noopener noreferrer">Open link</a>');
+  if(d.assetId&&/^[0-9a-f]{32}$/.test(d.assetId)){
+    var u='/_blob/'+d.assetId,ct=String(d.contentType||"");
+    links.push('<a class="btn sm'+(links.length?' ghost':'')+'" href="'+u+'" target="_blank" rel="noopener noreferrer">Open file'+(d.sizeBytes?' ('+fmtSize(d.sizeBytes)+')':'')+'</a>');
+    if(ct.indexOf("video/")===0)media='<video controls preload="metadata" src="'+u+'"></video>';
+    else if(ct.indexOf("image/")===0)media='<img src="'+u+'" alt="'+esc(d.title)+'">';
+  }
+  var meta=[d.meta1,d.meta2].filter(Boolean).map(esc).join(" · ");
+  var when="";if(d.addedAt){var dt=new Date(d.addedAt);if(!isNaN(dt))when=dt.toLocaleDateString();}
+  return '<div class="card lib-item"><div class="row"><span class="chip">'+esc(d.grade||"PK-3")+'</span>'+(d.focus?'<span class="chip gold">'+esc(d.focus)+'</span>':'')+'</div>'+
+    '<h3>'+esc(d.title||"Untitled")+'</h3>'+(meta?'<p class="small muted">'+meta+'</p>':'')+(d.desc?'<p>'+esc(d.desc)+'</p>':'')+media+
+    '<div class="row">'+links.join("")+(LIB.canWrite!==false&&LIB.db?'<button type="button" class="btn danger sm" data-act="lib-del" data-id="'+esc(it.id)+'">Remove</button>':'')+(when?'<span class="small muted">Added '+esc(when)+'</span>':'')+'</div></div>';
+}
+function paintLibrary(){
+  var el=document.getElementById("lib-list"),type=curView(),c=LIBCFG[type];if(!el||!c)return;
+  if(!LIB.ready){el.innerHTML="";return;}
+  if(LIB.err){el.innerHTML='<p class="small muted">The library could not be loaded. Reload the page to try again.</p>';return;}
+  if(!LIB.loaded){el.innerHTML='<p class="small muted">'+(LIB.slow?'Still connecting. The library may be out of date.':'Loading the library.')+'</p>';return;}
+  var rows=LIB.items.filter(function(it){return it.d&&it.d.type===type&&(!LIBF.grade||it.d.grade===LIBF.grade)&&(!LIBF.focus||it.d.focus===LIBF.focus);});
+  var any=LIB.items.some(function(it){return it.d&&it.d.type===type;});
+  if(!rows.length){el.innerHTML='<div class="ph"><strong>'+(any?"Nothing matches these filters.":c.empty)+'</strong><span>'+(any?"Change the grade band or focus filter.":c.hint)+'</span></div>';return;}
+  el.innerHTML=rows.map(libCard).join("");
+}
+function paintIfLib(){var v=curView();if(LIBCFG[v]){paintLibrary();}}
+function setStatus(t,bad){var s=document.getElementById("lib-status");if(s){s.textContent=t;s.style.color=bad?"var(--crit)":"var(--muted)";}}
+function libErr(e){
+  var c=e&&e.code;
+  if(c==="ext")return "That file type is not supported. Use PDF, MP4, WebM, an image, or text. For Word or PowerPoint, save as PDF or add a link.";
+  if(c==="too_large")return "That file is over the size limit. Add a link instead.";
+  if(c==="unsupported_type")return "That file type is not supported. Save as PDF or add a link.";
+  if(c==="quota_or_state"||c==="quota_exceeded")return "The library storage is full. Remove an item or ask the owner for more space.";
+  if(c==="rate_limited"||c==="resource_exhausted")return "Too many requests. Wait a moment and try again.";
+  if(c==="not_granted"||c==="invalid_argument"||c==="revoked")return "You do not have permission to add items here.";
+  return "Could not save. Try again.";
+}
+async function libAdd(type){
+  if(LIB.busy)return;
+  var g=function(id){var e=document.getElementById(id);return e?e.value.trim():"";};
+  var title=g("lf-title"),url=g("lf-url"),fe=document.getElementById("lf-file"),file=fe&&fe.files&&fe.files[0];
+  if(!title){setStatus("Add a title.",true);return;}
+  if(url&&!/^https:\/\//i.test(url)){setStatus("Links must start with https://",true);return;}
+  if(!url&&!file){setStatus("Add a link, a file, or both.",true);return;}
+  LIB.busy=true;var btn=document.getElementById("lf-add");if(btn)btn.disabled=true;
+  var assetId="",fname="",ctype="",size=0,ok=false;
+  try{
+    if(file){
+      var ext=(file.name.split(".").pop()||"").toLowerCase(),mt=MT[ext];
+      if(!mt)throw {code:"ext"};
+      setStatus("Uploading file.");
+      var r=await LIB.assets.upload(file,{type:mt});
+      assetId=r.id;fname=file.name;ctype=r.contentType;size=r.sizeBytes;
+    }
+    setStatus("Saving.");
+    var doc={type:type,title:title,desc:g("lf-desc"),meta1:g("lf-m1"),meta2:g("lf-m2"),url:url,assetId:assetId,fileName:fname,contentType:ctype,sizeBytes:size,grade:g("lf-grade"),focus:g("lf-focus"),addedAt:new Date().toISOString(),addedBy:LIB.myId||""};
+    try{await LIB.db.collection("library").add(doc);}catch(e2){if(assetId){try{await LIB.assets.delete(assetId);}catch(x){}}throw e2;}
+    ok=true;
+  }catch(e){setStatus(libErr(e),true);}
+  LIB.busy=false;
+  if(ok){paintForm(type);setStatus("Added.");}else{var b2=document.getElementById("lf-add");if(b2)b2.disabled=false;}
+}
+function libDel(b){
+  if(b.dataset.arm!=="1"){b.dataset.arm="1";b.textContent="Confirm remove";setTimeout(function(){if(b.isConnected){b.dataset.arm="";b.textContent="Remove";}},4000);return;}
+  var id=b.dataset.id,it=LIB.items.filter(function(x){return x.id===id;})[0];
+  b.disabled=true;
+  LIB.db.doc("library/"+id).delete().then(function(){
+    if(it&&it.d&&it.d.assetId&&LIB.assets){return LIB.assets.delete(it.d.assetId).catch(function(){});}
+  }).catch(function(){b.disabled=false;b.dataset.arm="";b.textContent="Could not remove";});
+}
+function libAct(a,b){if(a==="lib-add")libAdd(curView());else if(a==="lib-del")libDel(b);}
+function libSubscribe(){
+  if(!LIB.db||LIB.sub)return;
+  var timer=setTimeout(function(){LIB.slow=true;paintIfLib();},10000);
+  LIB.sub=LIB.db.collection("library").orderBy("addedAt","desc").limit(500).onSnapshot(function(s){
+    clearTimeout(timer);LIB.slow=false;LIB.err="";LIB.loaded=true;
+    LIB.items=s.docs.map(function(d){return {id:d.id,d:d.data()||{}};});paintIfLib();
+  },function(e){clearTimeout(timer);LIB.err=(e&&e.code)||"error";paintIfLib();});
+}
+function libInit(){
+  function done(){LIB.ready=true;if(!LIB.db){LIB.items=SNAP;LIB.loaded=true;}var v=curView();if(LIBCFG[v]){paintForm(v);paintLibrary();}}
+  if(!window.claude||!window.claude.use){done();return;}
+  Promise.all([window.claude.use("db"),window.claude.use("assets"),window.claude.use("user")]).then(function(r){
+    LIB.db=r[0];LIB.assets=r[1];LIB.user=r[2];
+    if(!LIB.user)return [null,""];
+    return Promise.all([LIB.user.can("data.write"),LIB.user.id()]);
+  }).then(function(x){
+    LIB.canWrite=x[0];LIB.myId=x[1]||"";done();libSubscribe();
+  }).catch(function(){done();});
+}
+var DESE_TIER="https://www.doe.mass.edu/massliteracy/leading-mtss/tiered-instruction.html";
+var DESE_MTSS="https://www.doe.mass.edu/sfss/mtss/";
+
+/* ---------- unit plans ---------- */
+var UP={K:[
+{n:1,t:"Going Places",eq:"What makes a place special?",dr:"Think, Pair, Share",av:"map, move, land, special",eou:"Kindergarten Unit 1 EOU (window not listed)",wr:"Write a book (shared write). W.K.3, L.K.1-2, L.K.6. Mentors: All Kinds of Books, My Apron, Who Hoots?, I Want a Dog, In My New Yellow Shirt.",pbi:"Research art and history museums, choose one, and write a persuasive text about it.",
+w:[["How does imagination make a place seem different?","cube, circle, square, triangle","Realistic fiction","Mission Accomplished! (Ebony Joy Wilkins)","Identify and describe characters (RL.K.3); text evidence for characters (RL.K.3)","Singular nouns (L.K.1)","Descriptive sentences (W.K.3)","Mentor texts, Think/Plan (W.K.3)"],
+["What is exciting about moving to a new place?","crawls, peeks, unpacks, plunks","Realistic fiction","Too Many Places to Hide (Antonio Sacre)","Describe plot (RL.K.3); ask and answer questions (RL.K.1)","Singular nouns (L.K.1)","Descriptive sentences (W.K.3)","Plan and write (W.K.3)"],
+["What makes us want to visit a special place?","library, librarian, computer, movie","Informational","At the Library (Eric Braun)","Find main idea (RI.K.2); text evidence for main idea (RI.K.1)","Plural nouns (L.K.1.c)","Descriptive sentences (W.K.3)","Write stage (W.K.3)"],
+["What is fun about exploring new places?","chasing, slips, scrambles, follows","Realistic fiction","Where is Twister? (Bonnie Lass)","Describe setting (RL.K.3); new understanding about setting (RL.K.3)","Plural nouns (L.K.1.c)","Descriptive sentences (W.K.3)","Write stage (W.K.3)"],
+["How can I describe special places?","tools, pencils, markers, brushes","Informational","A Visit to the Art Store (Jerry Craft)","Author's purpose (RI.K.8); make connections (RI.K.2)","Singular and plural nouns (L.K.1.c)","Descriptive sentences (W.K.3)","Revise/Edit (W.K.5, L.K.1.6, L.K.1-2)"]]},
+{n:2,t:"Living Together",eq:"What do living things need?",dr:"Think, Pair, Share",av:"grow, need, share, depend",eou:"Assess 12/9-12/12",wr:"Informational text on a topic of choice (myView \"list book\"), brought to publication. W.K.2.",pbi:"Week 6: choose a pet, research what it needs, and share writing with a group or the class.",
+w:[["Why do some animals move from place to place?","butterflies, geese, whales","Informational","Animals on the Move (Ron Fridell)","Main idea and supporting details (RI.K.2); inferences (RI.K.1)","Related words (L.K.5); question and answer text structure (RI.K.10)","Adjectives and articles (L.K.1)","Journal prompts, shared writing, quick write"],
+["How do some living things make what they need?","bees, honey, nectar, hive","Informational","From Nectar to Honey (Kristen Taylor-Butler)","Text structure (RI.K.2); ask and answer questions (RI.K.1)","Synonyms and antonyms (L.K.5.b); words that help the reader visualize (L.K.5.c)","Adjectives and articles (L.K.1)","Journal prompts, shared writing, quick write"],
+["How do we know what we need?","shelter, food, water","Fiction","Do We Need This? (Guadalupe V. Lopez)","Identify and describe characters (RL.K.3); make connections (RL.K.10)","Context clues (RL.K.7); third-person text (RL.K.10)","Verbs: present (L.K.1.b)","Journal prompts, shared writing, quick write"],
+["How do different animals eat their food?","shark, eagle, hummingbird, turtle","Informational","Open Wide! (Ana Galan)","Text features (RI.K.7); make and confirm predictions (RI.K.1)","Word parts (L.K.4.a); words that help the reader visualize (L.K.5.c)","Verbs: past (L.K.1.b)","Plan and write (W.K.2)"],
+["Why is exercise important?","carry, push, climb, swim","Persuasive/opinion","Run, Jump, and Swim (Kimberly Feltes)","Text structure (RI.K.8); important details (RI.K.2)","Oral language (L.K.6); how the author supports points (RL.K.10)","Verbs: future (L.K.1.b)","Revise/Edit (W.K.5)"]]},
+{n:3,t:"Tell Me a Story",eq:"Why do we like stories?",dr:"Inside Outside Circle",av:"grow, need, share, depend (as listed on the plan; confirm against the Unit 3 map)",eou:"Unit 3 EOU (window not listed)",wr:"Fiction story, brought to publication. W.K.3. Mentors: Wemberly Worried, I Want a Dog!, Little Nino's Pizzeria, Just Like Daddy, If You Give a Mouse a Cookie.",pbi:"Research a story. Write or draw about why people should read it.",
+w:[["What can we learn from stories?","king, lion, leopard","Folktale","How Anansi Got His Stories (Ibi Zoboi)","Discuss theme (RL.K.1); visualize details (RL.K.3)","Related words (L.K.5); visualize (L.K.5.c)","Subjective pronouns (L.K.1)","Mentor texts, Think stage (whole group OK)"],
+["How are two versions of the same story alike and different?","catch, gobbled, baking, jumped","Fairy tale","The Gingerbread Man (Pleasant DeSpain); The Story of Cornbread Man (Joseph Bruchac)","Compare and contrast stories (RL.K.9); inferences (RL.K.1)","Antonyms (L.K.5b); author's craft (RL.K.10)","Objective pronouns (L.K.1)","Plan stage (W.K.3)"],
+["Why do we like poems?","fast, soon, down, great","Poetry","Poetry collection: Duck Meets the Moon, Humpty Dumpty, Hickory Dickory Dock","Rhyme and rhythm (RL.K.5); ask and answer questions (RL.K.1)","Context clues (L.K.6); words to visualize (RL.K.10)","Possessive pronouns (L.K.1)","Write stage (W.K.3)"],
+["Why do we like certain kinds of stories?","adventure, pretend, explorer, castle","Fiction","The Best Story (Debbie O'Brien)","Author's purpose (RL.K.5); make and confirm predictions (RL.K.1)","Word parts (L.K.4.a); third-person text (RL.K.10)","Prepositions (L.K.1a)","Write stage (W.K.3)"],
+["What do myths teach us about nature?","octopus, jellyfish, creatures","Myth","Mosni Can Help (Ruth Chan)","Describe plot (RL.K.3); make connections (RL.K.1)","Oral language (L.K.6); how the author supports points (RL.K.10)","Prepositions (L.K.1a)","Revise/Edit (W.K.5)"]]},
+{n:4,t:"Then and Now",eq:"What can we learn from the past?",dr:"Numbered Heads Together",av:"time, change, discover, tradition",eou:"Assess 4/14-4/17",wr:"Personal narrative. Mentors: My Apron, Harold and the Purple Crayon, Every Friday, Knuffle Bunny.",pbi:"Interview an older person about what life was like when they were a child.",
+w:[["Why is it important to make inventions better?","crank, radio, engine, CD player","Narrative nonfiction","Cars Are Always Changing (Gary Miller)","Describe connections (RI.K.3); important details (RI.K.2)","Related words (L.K.5); first-person text (RI.K.10); complete sentences (L.K.1.a)","Complete sentences (L.K.1.a)","Mentor texts, Think stage (W.K.3)"],
+["How do we learn about the past?","scientists, shovels, brushes, past","Narrative nonfiction","Uncovering the Past (Jennifer Torres)","Main idea and evidence (RI.K.2); inferences (RI.K.1)","Synonyms/antonyms (L.K.5); words that help the reader visualize (RI.K.10); kinds of sentences (L.K.1, L.K.2.c)","Kinds of sentences (L.K.1)","Plan stage (W.K.3)"],
+["How has communication changed over time?","farm, visit, pumpkin","Fiction","Grandma's Phone (Ken Mochizuki)","Describe setting (RL.K.3); visualize details (RL.K.1)","Context clues (L.K.4); third-person text (RL.K.10); end punctuation (L.K.c)","Punctuation (L.K.2.c)","Write stage (W.K.3)"],
+["What was life like in the past?","laws, marched, speech, country","Narrative nonfiction","Changing Laws, Changing Lives: Martin Luther King, Jr. (Eric Velasquez)","Text features (RI.K.3); create new understandings (RI.K.10)","How the author supports a point (RI.K.8); question words (L.K.1.b)","Question words (L.K.1.b)","Write stage (W.K.3)"],
+["What can we learn from family traditions?","brought, served, sailed, shared","Fiction","Tempura, Tempera (Lyn Miller-Lachmann)","Determine theme (RL.K.3); ask and answer questions (RL.K.1)","Oral language (L.K.1); graphic features (RL.K.7); question words (L.K.1.b)","Punctuation (L.K.2.c); question words (L.K.1.b)","Revise/Edit (W.K.5)"]]},
+{n:5,t:"Science: Our World",eq:"What can we learn from the weather?",dr:"Inside Outside Circle",av:"effect, measure, prepare, extreme",eou:"Assess 6/2-6/9",wr:"Literary nonfiction (question and answer book) using drawing, dictating, and digital tools. W.K.2, W.K.5, W.K.6. Mentors include Kenard Pak seasons books, The Meteorologist in Me, Fly Guy Presents Weather.",pbi:"Research weather: interview a meteorologist and use a national forecast map. Compare across texts (RI.K.9), SL.K.1, SL.K.2.",
+w:[["How have people learned to live in bad weather?","snow, weather, rainy, windy","Informational","Weather Around the World (Andre Ngapo)","Connect text and illustrations (RI.K.7); inferences (RI.K.1)","Related words (L.K.5); author's use of photos (RI.K.7); capitalization (W.K.5)","Capitalization (W.K.5)","Mentor texts, Think stage (W.K.2)"],
+["What helps plants live in hot climates?","desert, soil, bloom, ground","Informational","A Desert in Bloom (Justin Scott Parr)","Important details (RI.K.2); text structure (RI.K.10)","Synonyms and antonyms (L.K.5.b); visualize words (RI.K.10); end punctuation (L.K.2.b)","End punctuation (L.K.2.b)","Plan stage"],
+["How do we describe weather?","mound, squash, shoots, roots","Poetry","Poetry collection (Eric Gansworth)","Rhythm and rhyme (RL.K.5); visualize details (RL.K.1)","Context clues (L.K.4); rhythm/rhyme (RL.K.10); complete sentences (L.K.1.f)","Complete sentences (L.K.1.f)","Write stage, digital writing template"],
+["How can we protect ourselves in bad weather?","tornado, powerful, blizzard, strong","Informational","Tornado Action Plan; Blizzard Action Plan (Jill McDougall)","Compare and contrast texts (RI.K.9); ask and answer questions (RI.K.1)","Word parts (L.K.4.b); text structure (RI.K.3); expand sentences (L.K.1.f)","Expand sentences (L.K.1.f)","Write stage (W.K.6), digital template"],
+["How can rainy weather help the Earth?","rain, dirt, seeds","Drama","Who Likes Rain? (Stephan Krensky)","Characters in a drama (RL.K.3); new understandings (RL.K.2)","Oral language (L.K.6); author's purpose (RI.K.10); expand sentences (L.K.1.f)","Expand sentences (L.K.1.f)","Revise/Edit (W.K.6)"]]}
+]};
+UP["1"]=[{"n": 1, "t": "What is a neighborhood?", "eq": "What is a neighborhood?", "dr": "Think, Pair, Share", "av": "type, group, settle, various", "eou": "Assess 10/21-10/25 (as written on the slide)", "wr": "Write a story about a day at school. W.1.3, L.1.6, L.1.1-2. Mentors: Ralph Tells a Story, How to Babysit a Grandpa, Zin! Zin! Zin! A Violin!", "pbi": "Pairs research neighborhood workers and write an informational text explaining what a worker in their neighborhood does.", "w": [["How can neighbors help each other?", "check, quiet, listen, mutters", "Realistic fiction", "The Blackout", "Describe characters (RL.1.3); use text evidence (RL.1.1)", "Related words (L.1.5); first-person text (RL.1.6)", "Nouns (L.1.1c)", "Mentor texts, Think stage (W.1.3)"], ["What can I see in a neighborhood?", "sand, block, street, corner", "Realistic fiction", "Henry on Wheels", "Describe setting (RL.1.3); ask and answer questions (RL.1.1)", "Synonyms (L.1.5); word choice (L.1.5)", "Verbs, present tense (L.1.1e)", "Plan stage (W.1.3)"], ["How do signs in our neighborhood help us?", "left, right, guard, crosswalk", "Informational", "Look Both Ways", "Use text features (RI.1.5); use text evidence (RI.1.1)", "Context clues (L.1.4); text features (RI.1.5)", "Simple sentences (L.1.1)", "Write stage (W.1.3)"], ["How can I get to know my neighbors?", "plant, help", "Realistic fiction", "Garden Party", "Describe characters (RL.1.3); ask and answer questions (RL.1.1)", "Word parts (L.1.4b); word choice (L.1.1j)", "Adjectives and articles (L.1.1)", "Write stage (W.1.3)"], ["What does a neighborhood look like?", "stores, school, library, buildings", "Procedural text", "Click, Clack, Click; Making a Map (both listed on the slide)", "Use graphics (RI.1.6); make and confirm predictions (RL.1.1)", "Oral language (L.1.6); word choice (L.1.1j)", "Sentences with nouns, verbs, and adjectives (L.1.1)", "Revise/Edit (W.1.5, L.1.6, L.1.1-2)"]]}, {"n": 2, "t": "How do living things grow and change?", "eq": "How do living things grow and change?", "dr": "Directed Discourse", "av": "reason, nature, pattern, notice", "eou": "Unit 2 EOU (window not listed)", "wr": "Informational text on a topic of choice, brought to publication in Week 6. W.1.2, W.1.5. Students could write about a living thing from the unit. DESE Grade 1 exemplar and Standards in Action are linked on the slide.", "pbi": "Research zoo animals and write an opinion letter to a zoo keeper.", "w": [["How do animals grow and change?", "eggs, frogs, gills, tadpole", "Informational", "The Life of a Frog", "Find important details (RI.1.2); find main idea (RI.1.2); two-column notes", "Related words (L.1.5)", "Simple sentences (L.1.1)", "Mentor texts, Think stage (W.1.3)"], ["How do plants grow and change?", "buds, soil, stems, leaves", "Informational", "The Life Cycle of a Sunflower", "Use text features (RI.1.5); make inferences (RI.1.1)", "Synonyms and antonyms (L.1.5.d)", "Declarative sentences (L.1.1)", "Plan stage (W.1.3)"], ["How are baby animals different from their parents?", "kangaroo, penguin, polar, bear", "Informational", "How Do Baby Animals Grow?", "Discuss author's purpose (RI.1.5); ask and answer questions (RI.1.1)", "Context clues (L.1.4.b)", "Interrogative sentences (L.1.1)", "Write stage (W.1.3)"], ["How do animals change with the seasons?", "eat, dig, sleep, burrow", "Poetry", "The Long Sleep; Changes", "Describe elements of a poem (RL.1.4); create new understandings, sensory details (RL.1.4)", "Word parts (L.1.4.b)", "Exclamatory sentences (L.1.1.j)", "Write stage (W.1.3)"], ["How do people grow and change?", "big, new, fast, small", "Drama (play)", "Bigger Shoes for the Big Race", "Identify elements of a drama (RL.1.3); make inferences (RL.1.1)", "Oral language (L.1.4.b)", "Imperative sentences (L.1.1.j)", "Revise/Edit (W.1.5)"]]}, {"n": 3, "t": "How can we use our imaginations?", "eq": "How can we use our imaginations?", "dr": "Jigsaw", "av": "imagine, suppose, create, possible", "eou": "Assess 2/10-2/14", "wr": "Write a poem. Suggested prompt: a poem about something you like to eat or drink. W.1.3, W.1.5. Mentors: Zin! Zin! Zin! A Violin!, Quick as a Cricket, Hailstones and Halibut Bones, Charlie Parker Played Be Bop, A Poke in the I. DESE has no poetry exemplars for Grade 1.", "pbi": "Write an opinion text about why we should read folktales, using examples and a picture. W.1.1, W.1.5, W.1.6, SL.1.5.", "w": [["Why is it important to plan ahead?", "stored, begged, gathered, prepared", "Fable", "The Ant and the Grasshopper", "Describe plot (RL.1.3); make and confirm predictions (RL.1.2)", "Related words (L.1.6); third-person text (RL.1.6)", "Nouns, singular and plural (L.1.1c)", "Mentor texts, Think stage (W.1.3)"], ["How do tricky characters use their imagination?", "sadly, fairly, exactly, carefully", "Folktale", "The Clever Monkey", "Author's purpose (RL.1.1); make connections (RL.1.1)", "Synonyms and antonyms (L.1.5); word choice, details that describe (RL.1.4)", "Nouns, common and proper (L.1.1b)", "Plan stage (W.1.3)"], ["How can imagination lead to a new idea?", "draw, doodle, decorate, scribble", "Poetry", "Poodle Doodles; The Box; Sandcastle; Ladybug, Ladybug", "Elements of poetry (RL.1.4); make connections (RL.1.4)", "Context clues (L.1.4a); elements of poetry, rhyme (RL.1.10)", "Pronouns (L.1.1f)", "Write stage (W.1.3)"], ["How can stories help us learn lessons?", "sad, angry, happy, surprised", "Fable", "The Cow and the Tiger", "Describe plot and setting (RL.1.3); visualize details (RL.1.3)", "Word parts (L.1.4b); dialogue, words that convey feelings (RL.1.4)", "Pronouns I and me (L.1.2f)", "Write stage (W.1.3)"], ["Why are art and music classes important?", "think, learn, remember, concentrate", "Persuasive text", "Thumbs Up for Art and Music!", "Identify persuasive text (RI.1.8); make connections (RI.1.8)", "Oral language (L.1.6); word choice, persuasive words (RI.1.8)", "Capitalize I and proper names (L.1.2)", "Revise/Edit (W.1.5)"]]}, {"n": 4, "t": "Why is the past important?", "eq": "Why is the past important?", "dr": "Numbered Heads", "av": "record, supply, necessary, experience", "eou": "Assess 4/14-4/17", "wr": "Personal narrative. Suggested prompt: a personal narrative about a really great day. W.1.3, W.1.5. Mentors: Ralph Tells a Story, Owl Moon, Fireflies!, Tulip Sees America, Kitchen Dance. DESE Grade 1 narrative exemplar is linked on the slide.", "pbi": "Interview an older person about someone who was important to them and write about the interview in an essay.", "w": [["How do artists of the past help us see the world differently?", "amaze, memory, wonder, discovers", "Biography", "Frida Kahlo: Artist (timeline)", "Describe connections (RI.1.3); ask and answer questions (RI.1.1)", "Related words (L.1.5)", "Word choice (SL.1.1)", "Mentor texts, Think stage (W.1.1)"], ["How can a person's actions change the world?", "loved, cheered, admired, allowed", "Biography", "Martin Luther King Jr. (website)", "Use text structure (SL.1.2); create new understandings (SL.1.1a)", "Synonyms and antonyms (L.1.6)", "Graphic features, photographs (SL.1.1)", "Plan and write (W.1.1)"], ["How can technology change the world?", "drive, ranch, cattle, railroad", "Historical fiction (as listed)", "Technology in Our Lives (infographic)", "Determine theme (RL.1.2, RL.1.3); make connections (SL.1.1)", "Context clues (L.1.4.a)", "First-person text (RL.1.6)", "Plan and write (W.1.1)"], ["Why is it important to learn about our country's past?", "stars, field, patch, stripes", "Informational text", "What Is America? (poem)", "Compare and contrast texts (RI.1.9); find important details (RI.1.9)", "Word parts (L.1.4.b)", "Print features, bold words and labels (RI.1.5)", "Plan and write (W.1.3)"], ["What can people from the past teach us about helping others?", "vote, views, rights, leaders", "Biography", "Helpful Heroes (infographic)", "Identify main idea (RI.1.2); ask and answer questions (RI.1.1)", "Oral language (L.1.6)", "Third-person text (RF.1.4a)", "Revise/Edit (W.1.5)"]]}, {"n": 5, "t": "How do the seasons affect us?", "eq": "How do the seasons affect us?", "dr": "Directed Discourse", "av": "information, sense, expect, process", "eou": "Assess 6/2-6/9", "wr": "How-To book. Suggested prompt: I can write a How-To book. W.1.2, W.1.6. Mentors: How to Teach a Slug to Read, How to Make a Pancake, How to Make Slime, Walk On!", "pbi": "Write an opinion text about which season you like best, with reasons (W.1.8 as listed). Primary sources: a 1961 first-pitch photo and an interview with a meteorologist.", "w": [["What happens during the seasons?", "autumn, spring, summer, winter", "Informational", "Every Season", "Text structure (RI.1.2); make connections (RI.1.3)", "Related words (L.1.5); text structure (RI.1.8)", "Adverbs (L.1.2c)", "Mentor texts, Think stage (W.1.2)"], ["What are the seasons like around the world?", "dry, rain, snow, sunlight", "Informational", "Seasons Around the World", "Text features (RI.1.5); correct and confirm predictions (RI.1.1)", "Synonyms and antonyms (L.1.6); graphic features (RI.1.6)", "Transitions and conjunctions (L.1.1g)", "Plan stage (W.1.2)"], ["What do people like about the seasons?", "fawns, worm, squirrels", "Persuasive text", "In Spring", "Identify persuasive text (RI.1.8); correct and confirm predictions (SL.1.1)", "Context clues (L.1.4.a); word choice (RL.1.5d)", "Prepositions (L.1.1.i)", "Write stage (W.1.2, W.1.6)"], ["How do we know when the seasons are changing?", "crisp, chilly, breeze", "Fiction", "My Autumn", "Determine theme (RL.1.2); find important details (RL.1.2)", "Word parts (L.1.4b); word choice (RL.1.4)", "Prepositional phrases (L.1.1.i)", "Write stage (W.1.2, W.1.6)"], ["What do living things do in the winter?", "seasons, weather, daylight, temperature", "Informational", "Signs of Winter", "Use pictures (RI.1.6, RI.1.7); make inferences about illustrations and words (RI.1.1)", "Oral language (W.1.8); graphics (RI.1.7)", "Commas in dates and sentences (L.1.2.c)", "Revise/Edit (W.1.5)"]]}];
+var UPS={g:"K",u:1};
+var UPSRC={1:"Grade 1",2:"Grade 2",3:"Grade 3"};
+var EOUN={K:[6,6,6,6,6],"1":[11,10,10,10,16],"2":[12,13,11,16,15],"3":[20,13,12,8,17],"4":[18,17,19,17,18],"5":[18,17,18,18,18]};
+function eouCard(){
+  var rows=["K","1","2","3","4","5"].map(function(g){return '<tr><th scope="row">'+(g==="K"?"Kindergarten":"Grade "+g)+'</th>'+EOUN[g].map(function(n){return '<td>'+n+'</td>';}).join("")+'</tr>';}).join("");
+  return '<h3>End-of-unit assessments, K-5</h3><div class="tbl-wrap"><table><thead><tr><th scope="col">Grade</th><th scope="col">Unit 1</th><th scope="col">Unit 2</th><th scope="col">Unit 3</th><th scope="col">Unit 4</th><th scope="col">Unit 5</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="small muted">Number of items on each LPS end-of-unit assessment (Edcite). Each EOU has two reading comprehension passages (multiple choice), word study and conventions, and a writing response; K-1 print and hand-enter, Grades 2-5 online. The passages and answer keys are secure and stay in the district folder, not on this page.</p>';
+}
+function vUnits(){
+  var g=UPS.g,hd='<div class="row" role="group" aria-label="Grade">'+["K","1","2","3"].map(function(x){return '<button type="button" class="btn sm'+(x===g?'':' ghost')+'" data-act="unit-g" data-g="'+x+'" aria-pressed="'+(x===g?'true':'false')+'">'+(x==="K"?"Kindergarten":"Grade "+x)+'</button>';}).join("")+'</div>';
+  if(!UP[g]){
+    return sec("Unit Plans","Lynn myView unit overviews, Units 1-5, with weekly essential questions, texts, close-read skills, and writing.",hd+
+      ph("Grade "+g+" Units 1-5","The Grade "+g+" unit map deck was not in the shared folder (only Grade 1 was). Add the Grade "+g+" Units 1-5 slides there and this grade will be added.")+
+      '<p class="small">Grades 4 and 5 are outside the PK-3 scope of this initiative.</p>'+eouCard());
+  }
+  var U=UP[g],u=U[UPS.u-1];
+  var ub='<div class="row" role="group" aria-label="Unit">'+U.map(function(x){return '<button type="button" class="btn sm'+(x.n===UPS.u?'':' ghost')+'" data-act="unit-u" data-u="'+x.n+'" aria-pressed="'+(x.n===UPS.u?'true':'false')+'">Unit '+x.n+'</button>';}).join("")+'</div>';
+  var top='<div class="grid2">'+
+    card("Unit "+u.n+": "+u.t,'<p><strong>Essential question:</strong> '+u.eq+'</p><p><strong>Discourse routine:</strong> '+u.dr+'</p><p><strong>Academic vocabulary:</strong> '+u.av+'</p><p><strong>Vocabulary routines:</strong> Frayer Model, Word Splash</p><p><strong>End of unit:</strong> '+u.eou+'</p>')+
+    card("Writing and project",'<p><strong>Writing:</strong> '+u.wr+'</p><p><strong>PBI:</strong> '+u.pbi+'</p>')+'</div>';
+  var hdr=["Week","Essential question","Story vocabulary","Genre","Shared read","Close read skills","Reading bridge","Writing bridge","Writing"];
+  var rows=u.w.map(function(w,i){return '<tr><th scope="row">'+(i+1)+'</th>'+w.map(function(c){return '<td>'+c+'</td>';}).join("")+'</tr>';}).join("");
+  var tbl='<div class="tbl-wrap"><table><thead><tr>'+hdr.map(function(h){return '<th scope="col">'+h+'</th>';}).join("")+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var use=card("Use with read alouds",ul(["Pick the week’s shared read and plan two or three think-aloud stops tied to that week’s close read skill.","Teach the unit’s academic vocabulary with the Frayer Model or Word Splash; add three to five Tier 2 words from the story vocabulary.","Write one literal, one inferential, and one connect question from the weekly essential question."]));
+  return sec("Unit Plans","Lynn myView unit overviews. Kindergarten and Grade 1 are loaded; Grades 2-3 are pending. Links in the source slides (lesson overviews, progress checks, scripts) are in the district SharePoint.",hd+ub+top+'<h3>Weekly map</h3>'+tbl+use+eouCard()+(g==="K"?'<p class="small">Source: Kindergarten Units 1-5 overview, SY 26-27 suggested myView pacing. Confirm Unit 3 academic vocabulary, which repeats Unit 2 words on the source slide.</p>':'<p class="small">Source: Grade 1 Units 1-5 overview, SY 26-27 suggested myView pacing. Confirm against the map: Unit 1 Week 5 lists two texts, Unit 4 Week 3 lists a historical fiction genre with an infographic, and some slides repeat items from another unit (Unit 2 research articles, the Unit 4 header question, Unit 5 Weeks 4-5 vocabulary). The dashboard uses the values for each unit itself.</p>'));
+}
+function vMtss(){
+  var rows=[
+    ["Tier 1: Core","All students.","Equitable access to core instruction that addresses grade-level expectations. Screening and progress-monitoring data are used to differentiate instruction within Tier 1.","A read aloud with planned think-aloud stops, the six-step vocabulary routine, questions that move from literal to inferential, and UDL options such as partner talk and draw-and-label."],
+    ["Tier 2: Preventive intervention","Students who fall behind, show difficulty on screening measures, or make weak progress in core instruction.","Supplemental small group instruction, in addition to core. Targeted to the underlying difficulty, systematic, explicit, and highly interactive. Progress monitoring is used to regroup students periodically.","A small group that previews key words with pictures and gestures before the read aloud, or practices a short think-aloud with We do stems. If a screener points to word reading, the group targets foundational skills instead."],
+    ["Tier 3: Intensive intervention","Students for whom Tiers 1 and 2 were not enough.","Instruction that targets the underlying difficulty, in small groups or one-on-one, with ongoing tracking of performance. Tier 3 is not the same as special education, though a student may be evaluated.","Individual or very small group instruction on the identified skill gap, with frequent progress checks and planning shared with ELD or SPED specialists."]
+  ];
+  return sec("MTSS and Tiers of Instruction",
+    "DESE describes the Massachusetts Tiered System of Support (MTSS) as a framework for how districts build the systems to ensure each and every student receives a high quality educational experience. The definitions below follow DESE. The examples are ours, written for read aloud instruction, and are not district policy.",
+    '<div class="grid2">'+
+    card("What MTSS includes (DESE)",ul(['Proactively identifying and addressing the strengths and needs of all students.','Data-driven decision-making and progress monitoring.','Evidence-based supports and strategies with increasing intensity.','Equitable access and universal design for learning (UDL).','Integration of social emotional, behavioral, and academic learning.']))+
+    card("How the tiers work together",ul(['Tier 2 and Tier 3 are in addition to core instruction, not a replacement for it.','Movement between tiers is fluid and not linear. It is guided by screeners, diagnostic assessments, progress monitoring, and response to intervention, not by labels such as a diagnosed disability.','Students who exit an intervention are monitored to confirm core instruction is working for them.']))+
+    '</div>'+
+    '<h3>The three tiers</h3>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Tier</th><th>Who</th><th>What it is (DESE)</th><th>Example in K-3 reading (ours)</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join("")+'</tbody></table></div>'+
+    '<h3>Tier 1 expectations in a read aloud</h3>'+
+    card("Our reading: where the look-fors fit",ul([
+      'Tier 1 is where every student, including students who also receive Tier 2 or Tier 3 support, meets the grade-level text. Look-for 3B.5 asks for exactly this: access to grade-level tasks with appropriate support.',
+      'Think-alouds (3B.2), vocabulary routines (3B.3), and text-based questions (3B.6) are the core practices the Fall 2026 data show we need to strengthen.',
+      'When the look-fors show core instruction is inconsistent, strengthening Tier 1 comes before adding more intervention.']))+
+    '<h3>Questions for a team data meeting</h3>'+
+    card("",'<ol class="tight"><li>Is core instruction reaching most students? What do the look-fors and screening data show?</li><li>Which students are not making progress, and what is the underlying difficulty?</li><li>What targeted support will address it, and who will provide it?</li><li>How will we monitor progress, and when will we regroup?</li><li>For students who exit a group, how will we confirm core instruction is working?</li></ol>')+
+    '<h3>Lynn Tier 1 expectations, SY26-27</h3>'+
+    '<div class="grid2">'+
+    card("Whole group first",ul([
+      'Core Tier 1 instruction (vocabulary and language development, read alouds, questioning, and tasks), using the district HQIM, should primarily be delivered whole group, so all students have access to rigorous, grade-level content.',
+      'Whole group instruction must include intentional scaffolds and differentiation, particularly for students most likely to struggle with access: newcomers, early-instruction ELs, and students with learning and thinking differences.',
+      'All students have repeated opportunities to think, discuss, and write about text-based questions during and after the read aloud.',
+      'Small groups are used strategically during independent or small group work time, for added support and differentiation.']))+
+    card("What Tier 1 does and does not mean",ul([
+      'Tier 1 is the foundational support for all students: high-quality, inclusive, universally designed, grade-level instruction, plus universal screening and consistent progress monitoring.',
+      'Tier 1 does not mean every student gets the same experience. It does mean every student has access to high-quality, grade-level learning.',
+      'Trend the district wants to change: in SEI classrooms, comprehension instruction is often delivered mainly in small groups, with few whole-group read alouds and inconsistent use of myView. The result is a Tier 1 experience that varies by classroom and campus.']))+
+    '</div>'+
+    '<p class="small muted">Source: Tier 1 Reading Comprehension Instruction: District Guidance and Expectations, SY26-27 (Lynn Public Schools). Lynn’s instructional vision: every student experiences culturally and linguistically responsive, standards-aligned Tier 1 instruction that affirms their identity, challenges their thinking, and ensures access to grade-level learning.</p>'+
+    card("Programs named in the LPS Instructional Core (confirm grade spans)",ul(["mCLASS / DIBELS 8: screener and progress monitoring.","IXL: supplemental practice.","myView myFocus Reader and Intervention: intervention program."]))+
+    ph("Still to confirm","Screening tools, group sizes, minutes per week, and entry and exit criteria for Tier 2 and Tier 3 are not in the Tier 1 guidance. Add them here when confirmed.")+
+    '<p class="small muted">Sources: '+ext(DESE_MTSS,'DESE, Multi-Tiered System of Support')+' and '+ext(DESE_TIER,'DESE, Tiered Instruction (Evidence-Based Early Literacy)')+'. DESE does not list group sizes or session lengths on these pages.</p>');
+}
+var HUB={"LOOKFOR": {"decode": {"move": "Explicit, systematic foundational skills instruction", "detail": "The teacher models the target sound, spelling, or pattern clearly (I do), leads brief guided practice (we do), and gives immediate, specific corrective feedback as students read and spell words on their own (you do). Students apply the pattern in words and connected text the same day.", "student": "Every student says sounds, blends, reads, and spells words—not only watching or listening."}, "fluency": {"move": "Modeled and repeated reading with feedback", "detail": "The teacher models fluent reading of the text, students reread the same text multiple times (echo, choral, partner), and feedback addresses accuracy first, then phrasing and expression that match meaning.", "student": "Students reread with increasing accuracy and use phrasing and expression that show they understand the text."}, "vocab": {"move": "Intentional, explicit vocabulary instruction", "detail": "The teacher selects high-utility words from the text, gives student-friendly explanations and examples, and provides multiple chances for students to say, use, and connect the words. Word-part and context strategies are modeled and then practiced.", "student": "Students use target words in talk and writing and apply word-part or context strategies to new words."}, "comprehend": {"move": "Grade-level text with text-dependent questions", "detail": "All students engage with the grade-level text. The teacher sequences questions that send students back into the text, models thinking aloud when needed, and expects answers grounded in specific words, sentences, or details.", "student": "Students return to the text, point to evidence, and explain how it supports their thinking."}, "discuss": {"move": "Structured, student-centered discussion", "detail": "The teacher poses an open question about the text, provides talk structures (partners, stems, norms), and steps back so students do most of the talking. Students are expected to respond to and build on each other’s ideas.", "student": "Students talk to each other (not only to the teacher), refer to the text, and add on, agree, or disagree with reasons."}, "write": {"move": "Writing grounded in reading, with modeling", "detail": "The teacher models the writing move (shared writing, mentor sentence, think-aloud), students orally rehearse before writing, and the task requires them to use knowledge or evidence from the text.", "student": "Students write sentences or pieces that use evidence or knowledge from the text and show the target writing move."}}, "LANG": {"decode": {"use": "Inform", "fn": "Name sounds and letters; describe how words are built and changed.", "frames": {"Entering": ["This letter says /__/.", "I hear __."], "Developing": ["I hear __ sounds in __.", "The first sound is __."], "Expanding": ["When I change __ to __, the word becomes __.", "This word has __ syllables because __."]}, "note": "Some English sounds (for example short vowels, /sh/, or /th/) may not exist in a student’s home language. Show mouth position explicitly and treat approximations as developing pronunciation—not missing phonics knowledge."}, "fluency": {"use": "Narrate", "fn": "Read aloud with phrasing and expression that shows meaning; retell what was read.", "frames": {"Entering": ["[Echo reads a phrase]", "This part is __ (happy/sad)."], "Developing": ["I read this part __ because the character feels __.", "First __, then __."], "Expanding": ["I changed my voice here because __.", "The punctuation told me to __."]}, "note": "Model the text first so students hear phrasing and intonation before they are asked to read independently. Preview key words so decoding does not block meaning."}, "vocab": {"use": "Explain", "fn": "Define, give examples, and explain how word parts or context reveal meaning.", "frames": {"Entering": ["__ means __.", "[Point to picture] This is __."], "Developing": ["I think __ means __ because __.", "The part __ means __."], "Expanding": ["The clue __ helps me know __ means __.", "__ is like __, but __."]}, "note": "Look for cognates (e.g., family/familia, importante/important) and invite home-language connections. Pair words with visuals, gestures, and realia."}, "comprehend": {"use": "Narrate · Inform", "fn": "Retell, describe, and explain ideas using evidence from the text.", "frames": {"Entering": ["The character is __.", "The text is about __."], "Developing": ["In the text, it says __.", "I know __ because __."], "Expanding": ["The author shows __ when __.", "This detail supports __ because __."]}, "note": "Preview the knowledge and vocabulary the text assumes. Chunk complex sentences and ask students to unpack what they mean."}, "discuss": {"use": "Argue · Explain", "fn": "Agree, disagree, add on, and ask questions about ideas in the text.", "frames": {"Entering": ["I agree.", "I think __."], "Developing": ["I agree with __ because __.", "Can you say more about __?"], "Expanding": ["I want to add on to __’s idea: __.", "I see it differently because the text says __."]}, "note": "Give think time and a partner rehearsal before whole-group talk. Post stems where students can see them and model using them."}, "write": {"use": "Narrate · Inform · Argue", "fn": "Compose sentences and paragraphs that organize ideas and evidence.", "frames": {"Entering": ["[Draw + label] __.", "I like __."], "Developing": ["__ because __.", "First __. Next __. Last __."], "Expanding": ["One reason is __. For example, __.", "__, but __, so __."]}, "note": "Let students orally rehearse (in English or home language) before writing. Provide a model text and a word bank drawn from the reading."}}, "ELA_CORE": [{"t": "Rigorous, grade-level learning", "s": ["Listen to, discuss, retell, and write about grade-level read-alouds and myView texts", "Build knowledge and academic vocabulary", "Engage with complex, worthy texts as a whole class"], "te": ["Deliver core Tier 1 instruction (myView, Letterland) primarily whole group so all students access rigorous, grade-level content", "Model think-alouds strategically", "Press for evidence and reasoning"], "q": ["Is the Read Aloud/Reading Comprehension block whole-group and built on district HQIM (myView, Letterland)?", "Is the text grade-level and worthy of the lesson?", "Are students making meaning, not just completing tasks?"]}, {"t": "Culturally and linguistically responsive instruction", "s": ["Use language, identity, experience, and prior knowledge to build meaning", "Communicate ideas—regardless of language model (SEI, dual language, etc.)"], "te": ["Plan language demands and access points for newcomers, early-instruction ELs, and students with learning differences", "Use purposeful visuals, vocabulary routines, frames, and choice", "Provide supports without lowering the text"], "q": ["Who has access to whole-group Tier 1 instruction?", "Are ELs and students with IEPs included in core instruction, not routed only to small groups?", "Do supports increase access without lowering expectations?"]}, {"t": "Students do the thinking and talking", "s": ["Turn and talk", "Answer text-based questions across multiple reads", "Retell and summarize", "Respond to think-alouds through discussion and shared writing"], "te": ["Model think-alouds and gradual release", "Ask high-quality, text-based questions", "Give repeated opportunities to think, discuss, and write about the text", "Avoid doing the thinking for students"], "q": ["Who is doing most of the talking—teacher or students?", "Do students have repeated opportunities to respond orally and in writing across the read-aloud?"]}, {"t": "Instruction is responsive, scaffolded, and differentiated", "s": ["Receive small-group support (myFocus Reader/Intervention, Letterland Tier 2/3) matched to screening and progress-monitoring data", "Use feedback to grow as readers and writers"], "te": ["Use mCLASS/DIBELS 8, IXL, and myView/Letterland embedded assessment data to group and target instruction", "Deploy small groups strategically alongside—not instead of—whole-group Tier 1"], "q": ["What data drove this small-group work?", "Is small-group time supplementing whole-group Tier 1 or replacing it?", "Are scaffolds responsive and temporary?"]}], "SEE_HEAR": [{"t": "Look at the text + task", "dese": "Read About It", "q": "Is the myView/read-aloud text grade-level and complex, and—in K–3—is explicit foundational skills instruction (phonics, decoding, fluency) on pace?"}, {"t": "Listen to student talk", "dese": "Talk About It", "q": "Are students using academic language in discussion, responding to think-alouds, and building on peers’ ideas (comprehension/collaboration)?"}, {"t": "Read student work", "dese": "Write About It", "q": "Do opinion, informative, and narrative writing samples (drawing/dictating in K) reveal developing comprehension and language?"}, {"t": "Check access + respond", "dese": "Think About It", "q": "Is higher-order reasoning evident, and is small-group time targeted using formative and screening data (mCLASS, myView, IXL)?"}], "NOT_ALIGNED": "The reading comprehension block is delivered primarily in small groups with limited whole-group read-alouds, Tier 1 curricular materials (myView, Letterland) are used inconsistently, or students spend most of the block on worksheets or platform time rather than text-based talk and writing.", "COHERENCE": "The initiatives are not separate projects. myView Literacy, Letterland, curriculum maps, unit and lesson internalization, think-alouds, read-alouds, vocabulary routines, close reading, discourse, writing, mCLASS/IXL data, PLCs, and walkthroughs should all strengthen student access, thinking, reading, discussion, and writing.", "PROTECT": [["Grade-Level Access", "Every student works toward grade-level standards through myView and Letterland’s grade-level texts, read-alouds, and tasks.", "Core texts and read-alouds stay whole-group and Tier 1; small groups add support, they don’t replace it."], ["Student Thinking", "Students—not worksheets, platforms, or teacher talk—carry the central thinking and talking during the reading comprehension block.", "Students think aloud, discuss, retell, question, and write in response to text."], ["Evidence + Reasoning", "Discussion and writing consistently require students to develop ideas with evidence from the text.", "Evidence supports retelling, explanation, and written response across myView units."], ["Language as an Asset", "Multilingualism, culture, identity, and experience are resources for learning, not obstacles to overcome.", "Vocabulary and language routines happen through meaningful, grade-level content, regardless of language model."], ["Scaffold Without Lowering", "Support is specific, purposeful, and increasingly released while the whole-group, grade-level goal stays intact.", "Teachers adjust the pathway—visuals, vocabulary, frames, small-group time—not the grade-level destination."], ["Writing as a Process", "Students write frequently in response to read-alouds and myView texts, and improve through feedback and revision.", "Writing is both a tool for thinking and evidence of comprehension."], ["Evidence-Driven Response", "Teachers and teams study mCLASS, IXL, and myView/Letterland data—plus student talk and writing—to adjust practice.", "Screening and progress-monitoring data drive instructional grouping and next steps, never grades or labels."], ["Coherent Adult Learning", "PLCs, professional learning, CIT coaching, and leadership decisions reinforce the same instructional vision.", "HQIM (myView, Letterland), internalization protocols, feedback, and common assessments operate as connected levers."]], "CORE_THROUGH": [["01 · Prepare", "Collaborative Intellectual Preparation", "Internalize the week’s myView or Letterland unit—text, task, standards, language demands, anticipated student thinking, and supports that preserve rigor."], ["02 · Implement + Feedback", "Lesson Implementation with Feedback", "Use teacher moves—think-alouds, vocabulary routines, and gradual release—that make student thinking visible and build knowledge, language, and comprehension during the whole-group Tier 1 block."], ["03 · Analyze + Respond", "Analysis of Student Learning", "Use student talk, writing, and mCLASS, IXL, and myView assessment data to determine grouping and the next instructional moves."]]};
+var WNEED=[["vocab","Vocabulary"],["comprehend","Comprehension"],["discuss","Discussion"],["write","Writing about reading"]];
+function tbl(h,rows){return '<div class="tbl-wrap"><table><thead><tr>'+h.map(function(x){return '<th scope="col">'+x+'</th>';}).join("")+'</tr></thead><tbody>'+rows.map(function(r){return '<tr><th scope="row">'+r[0]+'</th>'+r.slice(1).map(function(c){return '<td>'+c+'</td>';}).join("")+'</tr>';}).join("")+'</tbody></table></div>';}
+function vPrism(){
+  var pri=[
+    ["PK-3","Priority 1: Think-alouds and vocabulary routines","3B.2 meaning-making through read alouds and think-alouds; 3B.3 key words, phrases, and sentences","3B.2 36% to 76%; 3B.3 56% to 86%"],
+    ["K-3","Priority 2: High-quality questions and tasks","3B.5 grade-level tasks with support; 3B.6 text-based questions that move from literal to inferential","3B.5 40% to 70%; 3B.6 10% to 55%"]
+  ].map(function(r){return '<tr><th scope="row"><span class="chip gold">'+r[0]+'</span><br>'+r[1]+'</th><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join("");
+  var prog=tbl(["Look-for","Spring 2026 actual","Fall 2026 goal","Fall 2026 actual","Winter 2027 goal","Spring 2027 goal"],[
+    ["PK-3 3B.2 think-alouds","36%","40%","32%","55%","76%"],
+    ["PK-3 3B.3 vocabulary","56%","60%","50%","70%","86%"],
+    ["K-3 3B.5 grade-level tasks","40%","45%","19%","55%","70%"],
+    ["K-3 3B.6 literal to inferential questions","10%","15%","12%","35%","55%"]]);
+  var mcas=tbl(["Grade 3 MCAS ELA, student group","Meeting or Exceeding","Partially Meeting","Not Meeting"],[
+    ["All students","17%","44%","39%"],["Students with disabilities","1%","36%","63%"],["ELs and former ELs","11%","45%","44%"],["Low income","14%","44%","42%"],["Black or African American","17%","37%","46%"],["Hispanic or Latino","14%","44%","42%"]]);
+  var pd=tbl(["Date","Session","Audience","Focus"],[
+    ["Dec 1-3, 2026","Impactful vocabulary routines and read alouds","Principals, program specialists, CITs","Vocabulary routines before, during, and after a read aloud; using myView and Dual Language materials"],
+    ["Feb 2-4, 2027","Think-alouds and gradual release","Principals, program specialists, CITs","Modeling thinking; releasing the cognitive lift to students"],
+    ["Mar 9-11, 2027","High-quality questions and tasks","Principals, program specialists, CITs","Grade-level questions and tasks that place the thinking on students"],
+    ["Apr 6-8, 2027","Scaffolded text-based questions across multiple reads","Principals, program specialists, CITs","Literal to inferential across rereads"]]);
+  var cal=tbl(["When","Event"],[
+    ["9/14 to 10/2","DIBELS BOY window. MOY: 1/4 to 1/22. EOY: 5/24 to 6/7"],
+    ["10/5 to 10/9","Fall progress monitoring walkthroughs (PRISM and TNTP with district leaders)"],
+    ["10/28 and 11/3","BOY data stepback with district leaders, then with the PRISM leadership team"],
+    ["Week of 1/25","Winter progress monitoring walkthroughs"],
+    ["April 2027","ELA MCAS window; TNTP PRISM survey opens"],
+    ["Week of 5/24","Spring progress monitoring walkthroughs"],
+    ["10/13 through 6/10","Brown Knowledge Inventory survey windows (October to mid-November, April to June 10)"]]);
+  var pdsa=tbl(["Cycle","Dates","Focus for K-3"],[
+    ["Cycle 1","Start of year to early October","Updated Tier 1 reading comprehension guidance (whole group, with built-in scaffolds); shared preparation, internalization, and data-reflection documents; four follow-up office hours (9/15, 9/16, 9/30, 10/1)"],
+    ["Cycle 2","Late October to early February","Curriculum maps that add vocabulary routines, think-aloud samples, and stronger questioning prompts to supplement myView; PD and job-embedded coaching for leaders; district interim walkthroughs with targeted look-fors; Early Literacy League subteams; video library"],
+    ["Cycle 3","Late February to early June","Continue subteam deliverables and socialization; PD and coaching; interim walkthroughs; exact focus set by Winter data"]]);
+  var assess=tbl(["Assessment","Grades","What it tells us","Use"],[
+    ["DIBELS (Amplify)","K-3, except Dual Language","Foundational reading skills against a national benchmark, 3 times a year","Benchmark status sets progress-monitoring frequency and tiered grouping"],
+    ["STAR (Dual Language)","K-3 Dual Language","Universal screening in place of DIBELS","Windows and reporting still to be confirmed with the Dual Language office"],
+    ["Letterland observations","PK-3","Small-group foundational skills observations; not a graded test","Informs grouping and next steps with screening data"],
+    ["myView end-of-unit assessments","K-3","Reading comprehension (two passages, multiple choice), word study and conventions, writing","About once per unit via Edcite (K-1 print and hand-enter; Grades 2-5 online); under revision for Next-Gen MCAS 2027"],
+    ["Student work and curriculum tasks","PK-3","Understanding of read aloud concepts and knowledge building","Daily formative evidence from read aloud and center notes"],
+    ["Next-Gen MCAS ELA","3","State accountability assessment; 2027 test design changes","Informs curriculum map and EOU revisions"]]);
+  var role=tbl(["Role","Think-aloud and vocabulary implication"],[
+    ["Classroom teacher","Plan stopping points, rehearse a think-aloud, run a vocabulary routine on 3 to 5 Tier 2 words, and ask at least one question that moves from literal to inferential."],
+    ["CIT or coach","Use PD content for intellectual preparation sessions and short coaching cycles focused on one look-for per teacher."],
+    ["School leader","Use the four look-fors during walkthroughs, and protect PLC time for internalizing the read aloud."],
+    ["District leader","Track benchmarks by window, direct PD and coaching to the lowest look-fors, and release PD and coaching to Lynn facilitators over the year."]]);
+  return sec("PRISM goals and data","The PRISM grant and TNTP are supporting this work with Lynn. This page pulls the goals, benchmarks, PD calendar, and data sources from the 2026-2027 PRISM Action Plan Workbook. Figures not marked otherwise come from the workbook.",
+    '<div class="panel"><h3>District instructional priority</h3><p>Strengthen the Instructional Core: culturally and linguistically responsive, grade-level rigorous instruction for all students, with ML, SWD, and Tier 1 supports built into grade-level instruction. Three work streams: launch a cohesive Instructional Core framework; calibrate planning, PLC, and walkthrough practices around it; embed supports in grade-level instruction.</p></div>'+
+    '<h3>Two priorities and the 2027 targets</h3><div class="tbl-wrap"><table><thead><tr><th scope="col">Priority</th><th scope="col">Target look-fors</th><th scope="col">June 2027 goal</th></tr></thead><tbody>'+pri+'</tbody></table></div>'+
+    '<p class="small muted">Goals apply regardless of language model. Both priorities are the focus of this toolkit: think-alouds and vocabulary routines (3B.2, 3B.3) and high-quality questions and tasks (3B.5, 3B.6).</p>'+
+    '<h3>Benchmarks by window</h3>'+prog+'<p class="small muted">Fall 2026 actuals are from the BOY walkthroughs. Winter 2027 and Spring 2027 actuals will be added after each progress monitoring window. K-3 Winter goal for 3B.6 is 35%.</p>'+
+    '<h3>Grade 3 MCAS baseline by student group</h3>'+mcas+'<p class="small muted">District Grade 3 goal: 18% Meeting or Exceeding for 2025-26 (met); 20% for 2026-27. Disparity reduction targets for student groups are still being set.</p>'+
+    '<h3>PreK-3 leader learning intensives with TNTP</h3>'+pd+'<p class="small muted">Each series has three days. Day 1 is a 2.5-hour professional learning session offered twice (8:00 to 10:30 and 11:15 to 1:45) at 195 Market Street, 1st Floor PD Room, for principals, program specialists, and CITs. Day 2 is job-embedded support for principals and program specialists on leading walkthroughs, identifying instructional trends, and choosing supports. Day 3 is job-embedded coaching for CITs aligned with district literacy priorities. Day 2 and Day 3 are at schools to be determined; dates are the day after and two days after Day 1.</p>'+
+    '<h3>Data and walkthrough calendar</h3>'+cal+
+    '<h3>Improvement cycles (PDSA), K-3</h3>'+pdsa+
+    '<h3>Assessment plan</h3>'+assess+
+    '<h3>What this means by role</h3>'+role+
+    card("What the October report says",ul([
+      'Teachers are asking for models of strong vocabulary routines in myView whole group and small group, and for guidance on priority vocabulary words.',
+      'Teachers have limited models of strong questioning and think-alouds.',
+      'Moving questions from literal to inferential changes how materials are used, how lessons are internalized, and what teachers do. Curriculum map revisions began in October.',
+      'Early Literacy League subteams began meeting October 6 and 23, and a virtual meeting follows on November 3.']))+
+    '<p class="small muted">Leader-facing items in the workbook, such as item status, rosters, contacts, and fund use, are not reproduced here.</p>');
+}
+function vWida(){
+  var rows=WNEED.map(function(n){var l=HUB.LANG[n[0]];
+    return '<tr><th scope="row">'+n[1]+'<br><span class="small muted">'+esc(l.use)+'</span></th><td>'+esc(l.fn)+'</td>'+
+      ["Entering","Developing","Expanding"].map(function(lv){return '<td>'+ul(l.frames[lv].map(esc))+'</td>';}).join("")+'</tr>';}).join("");
+  var notes=WNEED.map(function(n){return '<li><strong>'+n[1]+'.</strong> '+esc(HUB.LANG[n[0]].note)+'</li>';}).join("");
+  return sec("WIDA","Language supports aligned to the WIDA ELD Standards Framework, organized by what students do with language during read aloud.",
+    '<h3>Starter sentence frames by language use and proficiency level</h3>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Literacy need</th><th>Language function</th><th>Entering</th><th>Developing</th><th>Expanding</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<p class="small muted">Starter set from the LPS Elementary ELA and Reading Curriculum Hub. Use it with the unit WIDA standards in the myView planning decks. Official WIDA frames and key language uses will replace or extend it.</p>'+
+    card("Teaching notes for multilingual learners",'<ul class="tight">'+notes+'</ul>')+
+    ph("WIDA Key Language Uses and the 64 sentence frames","To be added by PRISM ELL Subteam 3."));
+}
+function lfCard(k){var l=HUB.LOOKFOR[k],n=WNEED.filter(function(x){return x[0]===k;})[0][1];
+  return card("Look-for: "+esc(l.move),'<p>'+esc(l.detail)+'</p><p><strong>What students show.</strong> '+esc(l.student)+'</p><p class="small muted">Category: '+n+'. Source: LPS Elementary ELA and Reading Curriculum Hub.</p>');}
+function withLF(f,keys){return function(){return f()+'<div style="margin-top:22px" class="sec"><h3>What to look for</h3><div class="grid2">'+keys.map(lfCard).join("")+'</div></div>';};}
+function vCore(){
+  var dom=HUB.ELA_CORE.map(function(d){return card(esc(d.t),'<h4>Students</h4>'+ul(d.s.map(esc))+'<h4>Teachers</h4>'+ul(d.te.map(esc))+'<h4>Leader questions</h4>'+ul(d.q.map(esc)));}).join("");
+  var prot=HUB.PROTECT.map(function(x){return card(esc(x[0]),'<p>'+esc(x[1])+'</p><p class="small muted">'+esc(x[2])+'</p>');}).join("");
+  var sh='<div class="tbl-wrap"><table><thead><tr><th>Look at or listen for</th><th>DESE guide section</th><th>Guiding question</th></tr></thead><tbody>'+HUB.SEE_HEAR.map(function(x){return '<tr><th scope="row">'+esc(x.t)+'</th><td>'+esc(x.dese)+'</td><td>'+esc(x.q)+'</td></tr>';}).join("")+'</tbody></table></div>';
+  return '<div style="margin-top:30px">'+sec("LPS Instructional Core: Tier 1 reading comprehension look-fors","What students and teachers do in each of the four domains, with questions for leaders. Drawn from the LPS Elementary ELA and Reading Curriculum Hub; confirm wording against the district Tier 1 guidance.",
+    '<div class="grid2">'+dom+'</div>'+
+    card("When the block is not aligned",'<p>'+esc(HUB.NOT_ALIGNED)+'</p>','')+
+    card("How the pieces fit together",'<p>'+esc(HUB.COHERENCE)+'</p>','')+
+    '<h3>What we protect</h3><div class="grid2">'+prot+'</div>'+
+    '<h3>See and hear: mapped to the DESE guide</h3>'+sh)+'</div>';
+}
+var RENDER={prism:vPrism,wida:vWida,units:vUnits,start:vStart,mcas:vMcas,mtss:vMtss,research:function(){return vLib("research");},webinars:function(){return vLib("webinars");},videos:function(){return vLib("videos");},lessons:function(){return vLib("lessons");},think:vThink,vocab:vVocab,ques:vQues,supports:vSupports,toolbox:vToolbox,reflect:vReflect,track:vTrack,resources:vResources};
+
+RENDER.think=withLF(vThink,["comprehend"]);RENDER.vocab=withLF(vVocab,["vocab"]);RENDER.ques=withLF(vQues,["discuss","write"]);
+RENDER.toolbox=(function(f){return function(){return f()+vCore();};})(vToolbox);
+
+/* ---------- goal meters ---------- */
+function numv(x){var v=parseFloat(x);return isNaN(v)?null:Math.max(0,Math.min(100,v));}
+function findG(id){return ALLG.filter(function(l){return l.id===id;})[0];}
+function latest(g){
+  var gd=S.goals[g.id]||{},sp=numv(gd.spring),wi=numv(gd.winter);
+  if(sp!==null)return {v:sp,name:"Spring 2027",bench:g.goal,bn:"Spring goal"};
+  if(wi!==null)return {v:wi,name:"Winter 2027",bench:g.wbench,bn:"Winter benchmark"};
+  return {v:g.fall,name:"Fall 2026",bench:g.fbench,bn:"Fall benchmark"};
+}
+function r1(x){return Math.round(x*10)/10;}
+function paintGoal(id){
+  var g=findG(id),f=document.getElementById("fill-"+id),s=document.getElementById("st-"+id);if(!g||!f||!s)return;
+  var L=latest(g),d=r1(L.v-L.bench),c,t;
+  f.style.width=L.v+"%";
+  if(d>=0){c="good";t=d+" points above the "+L.bn;}else if(d>=-5){c="warn";t=Math.abs(d)+" points below the "+L.bn;}else{c="crit";t=Math.abs(d)+" points below the "+L.bn;}
+  var left=r1(g.goal-L.v);
+  s.className="status";
+  s.innerHTML='Latest ('+L.name+'): <strong>'+r1(L.v)+'%</strong> <span class="chip '+c+'">'+t+'</span> '+(left>0?left+' points to the Spring goal.':'Spring goal met.');
+}
+function paintClimb(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-climb]"),function(e){e.hidden=true;});
+  var mx=-1,id=null;LF.forEach(function(l){var gap=l.goal-latest(l).v;if(gap>mx){mx=gap;id=l.id;}});
+  var el=id&&document.querySelector('[data-climb="'+id+'"]');if(el&&mx>0){el.hidden=false;el.textContent="Largest gap to goal: "+r1(mx)+" points";}
+}
+function paintCount(){var el=document.getElementById("chk-count");if(!el)return;var n=0,t=0;CHECK.forEach(function(c){c.items.forEach(function(x,i){t++;if(S.check.done[c.id+"-"+i])n++;});});el.textContent=n+" of "+t+" checked";}
+
+/* ---------- copy ---------- */
+function copyText(text,fbId){
+  var fb=document.getElementById(fbId||"copy-fb");
+  function fallback(){if(!fb)return;fb.innerHTML='<p class="small muted">Copying was blocked. Select the text below and copy it.</p><textarea rows="6" readonly id="copy-box"></textarea>';var ta=document.getElementById("copy-box");ta.value=text;ta.focus();ta.select();}
+  try{navigator.clipboard.writeText(text).then(function(){if(fb)fb.innerHTML='<p class="small" role="status">Copied.</p>';},fallback);}catch(e){fallback();}
+}
+function checkSummary(){
+  var out=["Read aloud reflection","Focus: "+(S.check.focus||"(none chosen)")];
+  CHECK.forEach(function(c){var lf=LF.filter(function(l){return l.id===c.id;})[0];var done=c.items.filter(function(x,i){return S.check.done[c.id+"-"+i];}).length;out.push(lf.code+" "+lf.short+": "+done+" of "+c.items.length);});
+  out.push("Next small step: "+(S.check.step||"(none yet)"));return out.join("\n");
+}
+function trackText(){
+  var h=["Date","Teacher","Grade","Focus look-for","Goal","Evidence","Next step"];
+  var rows=S.tracker.map(function(r){return [r.date,r.teacher,r.grade,r.focus,r.goal,r.evidence,r.next].map(function(x){return String(x||"").replace(/[\t\r\n]+/g," ");}).join("\t");});
+  return [h.join("\t")].concat(rows).join("\n");
+}
+
+/* ---------- shell ---------- */
+var view=document.getElementById("view");
+function curView(){var h=(location.hash||"").slice(1);return RENDER[h]?h:"start";}
+var GROUPS=[
+ {id:"g-start",label:"Start",v:["start","prism","wida"]},
+ {id:"g-teach",label:"Teach",v:["think","vocab","ques","units","mcas"]},
+ {id:"g-support",label:"Support",v:["supports","mtss","toolbox"]},
+ {id:"g-grow",label:"Grow",v:["reflect","track"]},
+ {id:"g-lib",label:"Library",v:["research","webinars","videos","lessons","resources"]}
+];
+var GLAST={};
+function vlabel(id){return VIEWS.filter(function(x){return x.id===id;})[0].label;}
+function renderTabs(){
+  var cur=curView(),rr=REC[S.role],cg=GROUPS.filter(function(g){return g.v.indexOf(cur)>-1;})[0];
+  if(cg)GLAST[cg.id]=cur;
+  document.getElementById("tabs").innerHTML=GROUPS.map(function(g){
+    var rec=g.v.some(function(x){return rr.indexOf(x)>-1;});
+    return '<a href="#'+(GLAST[g.id]||g.v[0])+'"'+(g===cg?' aria-current="page"':'')+(rec?' class="rec"':'')+'>'+g.label+(rec?'<span class="sr" style="position:absolute;left:-9999px"> (recommended for your role)</span>':'')+'</a>';
+  }).join("");
+  document.getElementById("subtabs").innerHTML=cg?cg.v.map(function(id){
+    var rec=rr.indexOf(id)>-1;
+    return '<a href="#'+id+'"'+(id===cur?' aria-current="page"':'')+(rec?' class="rec"':'')+'>'+vlabel(id)+'</a>';
+  }).join(""):"";
+}
+function renderTabsOld(){
+  var cur=curView();
+  document.getElementById("tabs").innerHTML=VIEWS.map(function(v){
+    var rec=REC[S.role].indexOf(v.id)>-1;
+    return '<a href="#'+v.id+'"'+(v.id===cur?' aria-current="page"':'')+(rec?' class="rec"':'')+'>'+v.label+(rec?'<span class="sr" style="position:absolute;left:-9999px"> (recommended for your role)</span>':'')+'</a>';
+  }).join("");
+}
+function render(){
+  renderTabs();
+  var v=curView();
+  view.innerHTML=(S.band==="all"&&(v==="think"||v==="vocab"||v==="ques")?'<p class="small"><span class="chip gold">PK-3</span> Showing the PK-1 examples. Choose 2 or 3 in the grade selector for the grade 2-3 examples.</p>':'')+RENDER[v]();
+  if(v==="start"){ALLG.forEach(function(l){paintGoal(l.id);});paintClimb();}
+  if(v==="reflect")paintCount();
+  if(LIBCFG[v]){paintForm(v);paintLibrary();}
+}
+function syncCtrls(){
+  document.getElementById("role").value=S.role;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-band]"),function(b){b.setAttribute("aria-pressed",b.getAttribute("data-band")===S.band?"true":"false");});
+}
+document.getElementById("role").addEventListener("change",function(e){S.role=e.target.value;save();render();});
+Array.prototype.forEach.call(document.querySelectorAll("[data-band]"),function(b){b.addEventListener("click",function(){S.band=b.getAttribute("data-band");save();syncGrade();syncCtrls();render();});});
+window.addEventListener("hashchange",function(){render();try{window.scrollTo(0,0);}catch(e){}});
+
+view.addEventListener("input",function(e){
+  var t=e.target;if(!t.dataset||!t.dataset.k)return;
+  setPath(t.dataset.k,t.value);save();
+  if(t.dataset.k.indexOf("goals.")===0){paintGoal(t.dataset.k.split(".")[1]);paintClimb();}
+});
+view.addEventListener("change",function(e){
+  var t=e.target;
+  if(t.dataset&&t.dataset.lf){LIBF[t.dataset.lf]=t.value;paintLibrary();return;}
+  if(t.dataset&&t.dataset.chk){S.check.done[t.dataset.chk]=t.checked;save();paintCount();return;}
+  if(t.dataset&&t.dataset.url){var row=t.closest(".entry");var a=row&&row.querySelector("a.open");if(a){var ok=/^https:\/\//i.test(t.value);if(ok){a.setAttribute("href",t.value);a.hidden=false;}else{a.removeAttribute("href");a.hidden=true;}}}
+  if(t.dataset&&t.dataset.k&&curView()==="track"&&t.tagName==="SELECT"){render();}
+});
+view.addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]");if(!b)return;
+  var a=b.dataset.act,l=b.dataset.list,i=parseInt(b.dataset.i,10);
+  if(a==="add-row"){S[l].push({});save();render();}
+  else if(a==="del-row"){S[l].splice(i,1);if(!S[l].length)S[l].push({});save();render();}
+  else if(a==="copy-check"){copyText(checkSummary());}
+  else if(a==="copy-track"){copyText(trackText());}
+  else if(a==="clear-check"){S.check.done={};save();render();}
+  else if(a==="wtl-g"){WTLG=b.dataset.g==="K"?"K":parseInt(b.dataset.g,10);render();}
+  else if(a==="unit-g"){UPS.g=b.dataset.g;UPS.u=1;render();}
+  else if(a==="unit-u"){UPS.u=parseInt(b.dataset.u,10);render();}
+  else if(a.indexOf("lib-")===0){libAct(a,b);}
+});
+
+function syncGrade(){var b=S.band;if(b==="k"||b==="1"||b==="2"||b==="3"){var g=b==="k"?"K":b;if(UPS.g!==g){UPS.g=g;UPS.u=1;}WTLG=g;}}
+syncGrade();
+syncCtrls();
+render();
+libInit();
+})();
+</script>
+</body></html>
